@@ -1,6 +1,10 @@
 use crate::track::{
     FeatureFieldAccess, UNREACHABLE_MESSAGE,
     properties::rider::rider_base::{Rider, RiderBuilder, RiderBuilderError},
+    trigger::{
+        Event, EventBuilder, Trigger, TriggerBuilder,
+        triggered_event::{TriggeredEventBuilder, TriggeredEventBuilderError},
+    },
 };
 use derive_more::Display;
 use getset::Getters;
@@ -8,37 +12,37 @@ use std::collections::HashSet;
 use thiserror::Error;
 
 #[derive(Debug, Display, PartialEq, Eq, Hash)]
-pub enum RiderFeature {
-    StartAngle,
-    Remount,
-}
+pub enum TriggerFeature {}
 
 #[derive(Debug, Getters)]
 #[getset(get = "pub")]
-pub struct RiderGroup {
-    riders: Vec<Rider>,
+pub struct TriggerGroup<E: Event, T: Trigger> {
+    initial: E,
+    triggers: Vec<TriggeredEvent<E, T>>,
 }
 
-pub struct RiderGroupBuilder {
-    features: HashSet<RiderFeature>,
-    riders: Vec<RiderBuilder>,
+pub struct TriggerGroupBuilder<E: EventBuilder, T: TriggerBuilder> {
+    features: HashSet<TriggerFeature>,
+    initial: E,
+    triggers: Vec<TriggeredEventBuilder<E, T>>,
 }
 
-impl Default for RiderGroupBuilder {
+impl Default for TriggerGroupBuilder<E: EventBuilder, T: TriggerBuilder> {
     fn default() -> Self {
         Self {
             features: HashSet::new(),
-            riders: vec![],
+            initial: E::default(),
+            triggers: vec![],
         }
     }
 }
 
 impl FeatureFieldAccess<RiderFeature, RiderGroupBuilderError> for RiderGroupBuilder {
-    fn require_feature<'a, F>(
+    fn require_feature<'a, T>(
         current_features: &HashSet<RiderFeature>,
-        field: &'a mut Option<F>,
+        field: &'a mut Option<T>,
         feature: RiderFeature,
-    ) -> Result<&'a mut F, RiderGroupBuilderError> {
+    ) -> Result<&'a mut T, RiderGroupBuilderError> {
         if !current_features.contains(&feature) {
             return Err(RiderGroupBuilderError::MissingFeatureFlag(feature));
         }
@@ -103,9 +107,9 @@ impl RiderGroupBuilder {
 #[derive(Error, Debug)]
 pub enum RiderGroupBuilderError {
     #[error("Expected feature to be registered before passing feature data: {0}")]
-    MissingFeatureFlag(RiderFeature),
+    MissingFeatureFlag(TriggerFeature),
     #[error("Expected feature data to be present because feature was enabled: {0}")]
     MissingAttribute(&'static str),
     #[error("{0}")]
-    RiderBuilderError(#[from] RiderBuilderError),
+    TriggeredEventBuilderError(#[from] TriggeredEventBuilderError),
 }

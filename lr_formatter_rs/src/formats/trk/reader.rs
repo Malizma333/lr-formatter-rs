@@ -336,9 +336,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         }
                         "1" => {
                             // Background Color
-                            let target_bg_red = values[1].parse::<i32>()?;
-                            let target_bg_green = values[2].parse::<i32>()?;
-                            let target_bg_blue = values[3].parse::<i32>()?;
+                            let red = values[1].parse::<i32>()?;
+                            let green = values[2].parse::<i32>()?;
+                            let blue = values[3].parse::<i32>()?;
                             let start_frame = values[4].parse::<i32>()?;
                             let end_frame = values[5].parse::<i32>()?;
                         }

@@ -45,11 +45,11 @@ impl Default for LayerGroupBuilder {
 }
 
 impl FeatureFieldAccess<LayerFeature, LayerGroupBuilderError> for LayerGroupBuilder {
-    fn require_feature<'a, T>(
+    fn require_feature<'a, F>(
         current_features: &HashSet<LayerFeature>,
-        field: &'a mut Option<T>,
+        field: &'a mut Option<F>,
         feature: LayerFeature,
-    ) -> Result<&'a mut T, LayerGroupBuilderError> {
+    ) -> Result<&'a mut F, LayerGroupBuilderError> {
         if !current_features.contains(&feature) {
             return Err(LayerGroupBuilderError::MissingFeatureFlag(feature));
         }

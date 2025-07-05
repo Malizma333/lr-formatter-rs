@@ -13,11 +13,11 @@ use thiserror::Error;
 use feature_field_access::{FeatureFieldAccess, UNREACHABLE_MESSAGE};
 pub use grid_version::GridVersion;
 pub use line_type::LineType;
-pub use properties::{layer, line, metadata, rider};
+pub use properties::{layer, line, metadata, rider, trigger};
 pub use rgb_color::RGBColor;
 pub use vec2::Vec2;
 
-use crate::track::properties::{
+use crate::track::{
     layer::layer_group::{LayerGroup, LayerGroupBuilder, LayerGroupBuilderError},
     line::line_group::{LineGroup, LineGroupBuilder, LineGroupBuilderError},
     metadata::{Metadata, MetadataBuilder, MetadataBuilderError},

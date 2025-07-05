@@ -50,11 +50,11 @@ impl Default for LineGroupBuilder {
 }
 
 impl FeatureFieldAccess<LineFeature, LineGroupBuilderError> for LineGroupBuilder {
-    fn require_feature<'a, T>(
+    fn require_feature<'a, F>(
         current_features: &HashSet<LineFeature>,
-        field: &'a mut Option<T>,
+        field: &'a mut Option<F>,
         feature: LineFeature,
-    ) -> Result<&'a mut T, LineGroupBuilderError> {
+    ) -> Result<&'a mut F, LineGroupBuilderError> {
         if !current_features.contains(&feature) {
             return Err(LineGroupBuilderError::MissingFeatureFlag(feature));
         }

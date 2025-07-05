@@ -1,46 +1,49 @@
 use crate::track::{
     FeatureFieldAccess, UNREACHABLE_MESSAGE,
-    properties::rider::rider_base::{Rider, RiderBuilder, RiderBuilderError},
+    trigger::{
+        Event, EventBuilder, Trigger, TriggerBuilder,
+        background_color::BackgroundColorEventBuilderError,
+    },
 };
 use derive_more::Display;
-use getset::Getters;
 use std::collections::HashSet;
 use thiserror::Error;
 
 #[derive(Debug, Display, PartialEq, Eq, Hash)]
-pub enum RiderFeature {
-    StartAngle,
-    Remount,
+pub enum TriggeredEventFeature {}
+
+pub struct TriggeredEvent<E: Event, T: Trigger> {
+    trigger: T,
+    event: E,
 }
 
-#[derive(Debug, Getters)]
-#[getset(get = "pub")]
-pub struct RiderGroup {
-    riders: Vec<Rider>,
+pub struct TriggeredEventBuilder<E: EventBuilder, T: TriggerBuilder> {
+    features: HashSet<TriggeredEventFeature>,
+    trigger: T,
+    event: E,
 }
 
-pub struct RiderGroupBuilder {
-    features: HashSet<RiderFeature>,
-    riders: Vec<RiderBuilder>,
-}
-
-impl Default for RiderGroupBuilder {
+impl<E: EventBuilder, T: TriggerBuilder> Default for TriggeredEventBuilder<E, T> {
     fn default() -> Self {
         Self {
             features: HashSet::new(),
-            riders: vec![],
+            trigger: T::default(),
+            event: E::default(),
         }
     }
 }
 
-impl FeatureFieldAccess<RiderFeature, RiderGroupBuilderError> for RiderGroupBuilder {
+impl<E: EventBuilder, T: TriggerBuilder>
+    FeatureFieldAccess<TriggeredEventFeature, TriggeredEventBuilderError>
+    for TriggeredEventBuilder<E, T>
+{
     fn require_feature<'a, F>(
-        current_features: &HashSet<RiderFeature>,
+        current_features: &HashSet<TriggeredEventFeature>,
         field: &'a mut Option<F>,
-        feature: RiderFeature,
-    ) -> Result<&'a mut F, RiderGroupBuilderError> {
+        feature: TriggeredEventFeature,
+    ) -> Result<&'a mut F, TriggeredEventBuilderError> {
         if !current_features.contains(&feature) {
-            return Err(RiderGroupBuilderError::MissingFeatureFlag(feature));
+            return Err(TriggeredEventBuilderError::MissingFeatureFlag(feature));
         }
 
         match field.as_mut() {
@@ -49,18 +52,18 @@ impl FeatureFieldAccess<RiderFeature, RiderGroupBuilderError> for RiderGroupBuil
         }
     }
 
-    fn check_feature<T>(
+    fn check_feature<F>(
         &self,
-        feature: RiderFeature,
-        field: &Option<T>,
+        feature: TriggeredEventFeature,
+        field: &Option<F>,
         attr_name: &'static str,
-    ) -> Result<(), RiderGroupBuilderError> {
+    ) -> Result<(), TriggeredEventBuilderError> {
         if self.features.contains(&feature) && field.is_none() {
-            return Err(RiderGroupBuilderError::MissingAttribute(attr_name));
+            return Err(TriggeredEventBuilderError::MissingAttribute(attr_name));
         }
 
         if !self.features.contains(&feature) && field.is_some() {
-            return Err(RiderGroupBuilderError::MissingFeatureFlag(feature));
+            return Err(TriggeredEventBuilderError::MissingFeatureFlag(feature));
         }
 
         Ok(())
@@ -101,11 +104,11 @@ impl RiderGroupBuilder {
 }
 
 #[derive(Error, Debug)]
-pub enum RiderGroupBuilderError {
+pub enum TriggeredEventBuilderError {
     #[error("Expected feature to be registered before passing feature data: {0}")]
-    MissingFeatureFlag(RiderFeature),
+    MissingFeatureFlag(TriggeredEventFeature),
     #[error("Expected feature data to be present because feature was enabled: {0}")]
     MissingAttribute(&'static str),
     #[error("{0}")]
-    RiderBuilderError(#[from] RiderBuilderError),
+    BackgroundColorEventBuilderError(#[from] BackgroundColorEventBuilderError),
 }

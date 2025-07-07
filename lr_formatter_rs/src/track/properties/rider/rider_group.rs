@@ -1,5 +1,6 @@
 use crate::track::{
-    FeatureFieldAccess, UNREACHABLE_MESSAGE,
+    group_builder_error::{GroupBuilderError, IntoGroupResult},
+    group_feature_access::GroupFeatureAccess,
     properties::rider::rider_base::{Rider, RiderBuilder, RiderBuilderError},
 };
 use derive_more::Display;
@@ -7,8 +8,9 @@ use getset::Getters;
 use std::collections::HashSet;
 use thiserror::Error;
 
-#[derive(Debug, Display, PartialEq, Eq, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum RiderFeature {
+    StartVelocity,
     StartAngle,
     Remount,
 }
@@ -16,58 +18,31 @@ pub enum RiderFeature {
 #[derive(Debug, Getters)]
 #[getset(get = "pub")]
 pub struct RiderGroup {
+    features: HashSet<RiderFeature>,
     riders: Vec<Rider>,
 }
 
+#[derive(Default)]
 pub struct RiderGroupBuilder {
     features: HashSet<RiderFeature>,
     riders: Vec<RiderBuilder>,
 }
 
-impl Default for RiderGroupBuilder {
-    fn default() -> Self {
-        Self {
-            features: HashSet::new(),
-            riders: vec![],
-        }
-    }
+#[derive(Debug, Error)]
+pub enum RiderSubBuilderError {
+    #[error("{0}")]
+    Rider(#[from] RiderBuilderError),
 }
 
-impl FeatureFieldAccess<RiderFeature, RiderGroupBuilderError> for RiderGroupBuilder {
-    fn require_feature<'a, F>(
-        current_features: &HashSet<RiderFeature>,
-        field: &'a mut Option<F>,
-        feature: RiderFeature,
-    ) -> Result<&'a mut F, RiderGroupBuilderError> {
-        if !current_features.contains(&feature) {
-            return Err(RiderGroupBuilderError::MissingFeatureFlag(feature));
-        }
+pub type RiderGroupBuilderError = GroupBuilderError<RiderFeature, RiderSubBuilderError>;
 
-        match field.as_mut() {
-            Some(some_field) => Ok(some_field),
-            None => unreachable!("{}", UNREACHABLE_MESSAGE),
-        }
-    }
-
-    fn check_feature<T>(
-        &self,
-        feature: RiderFeature,
-        field: &Option<T>,
-        attr_name: &'static str,
-    ) -> Result<(), RiderGroupBuilderError> {
-        if self.features.contains(&feature) && field.is_none() {
-            return Err(RiderGroupBuilderError::MissingAttribute(attr_name));
-        }
-
-        if !self.features.contains(&feature) && field.is_some() {
-            return Err(RiderGroupBuilderError::MissingFeatureFlag(feature));
-        }
-
-        Ok(())
-    }
-}
+impl GroupFeatureAccess<RiderFeature, RiderSubBuilderError> for RiderGroupBuilder {}
 
 impl RiderGroupBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn enable_feature(&mut self, feature: RiderFeature) -> &mut Self {
         self.features.insert(feature);
         self
@@ -86,26 +61,31 @@ impl RiderGroupBuilder {
         let mut riders: Vec<Rider> = vec![];
 
         for rider_builder in &self.riders {
-            let rider = rider_builder.build()?;
-            self.check_feature(
+            let rider = rider_builder.build().map_group_err()?;
+            Self::check_feature(
+                &self.features,
+                RiderFeature::StartVelocity,
+                &rider.start_velocity(),
+                "start_velocity",
+            )?;
+            Self::check_feature(
+                &self.features,
                 RiderFeature::StartAngle,
                 &rider.start_angle(),
                 "start_angle",
             )?;
-            self.check_feature(RiderFeature::Remount, &rider.can_remount(), "can_remount")?;
+            Self::check_feature(
+                &self.features,
+                RiderFeature::Remount,
+                &rider.can_remount(),
+                "can_remount",
+            )?;
             riders.push(rider);
         }
 
-        Ok(RiderGroup { riders })
+        Ok(RiderGroup {
+            features: self.features.clone(),
+            riders,
+        })
     }
-}
-
-#[derive(Error, Debug)]
-pub enum RiderGroupBuilderError {
-    #[error("Expected feature to be registered before passing feature data: {0}")]
-    MissingFeatureFlag(RiderFeature),
-    #[error("Expected feature data to be present because feature was enabled: {0}")]
-    MissingAttribute(&'static str),
-    #[error("{0}")]
-    RiderBuilderError(#[from] RiderBuilderError),
 }

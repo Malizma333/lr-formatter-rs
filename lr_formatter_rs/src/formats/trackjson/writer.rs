@@ -105,13 +105,9 @@ pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
 
     if let Some(rider_group) = track.rider_group() {
         for rider in rider_group.riders() {
-            let start_position = if let Some(start_pos) = rider.start_position() {
-                V2 {
-                    x: start_pos.x,
-                    y: start_pos.y,
-                }
-            } else {
-                V2 { x: 0.0, y: 0.0 }
+            let start_position = V2 {
+                x: rider.start_position().x,
+                y: rider.start_position().y,
             };
 
             let start_velocity = if let Some(start_vel) = rider.start_velocity() {

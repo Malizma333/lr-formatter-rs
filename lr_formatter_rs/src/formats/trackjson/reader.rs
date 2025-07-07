@@ -61,14 +61,12 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
 
             let (left_extension, right_extension) = if line_type == LineType::Scenery {
                 (false, false)
+            } else if let Some(ext) = line.extended {
+                (ext & 1 != 0, ext & 2 != 0)
+            } else if let (Some(left_ext), Some(right_ext)) = (line.left_ext, line.right_ext) {
+                (left_ext, right_ext)
             } else {
-                if let Some(ext) = line.extended {
-                    (ext & 1 != 0, ext & 2 != 0)
-                } else if let (Some(left_ext), Some(right_ext)) = (line.left_ext, line.right_ext) {
-                    (left_ext, right_ext)
-                } else {
-                    (false, false)
-                }
+                (false, false)
             };
 
             let flipped = line.flipped.unwrap_or(false);
@@ -259,7 +257,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
             track_builder
                 .rider_group()?
                 .add_rider()
-                .start_position(Some(start_position))
+                .start_position(start_position)
                 .start_velocity(Some(start_velocity))
                 .start_angle(Some(start_angle))
                 .can_remount(Some(can_remount));

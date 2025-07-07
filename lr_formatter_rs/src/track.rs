@@ -1,5 +1,6 @@
-mod feature_field_access;
 mod grid_version;
+mod group_builder_error;
+mod group_feature_access;
 mod line_type;
 mod properties;
 mod rgb_color;
@@ -10,21 +11,22 @@ use getset::Getters;
 use std::collections::HashSet;
 use thiserror::Error;
 
-use feature_field_access::{FeatureFieldAccess, UNREACHABLE_MESSAGE};
 pub use grid_version::GridVersion;
 pub use line_type::LineType;
-pub use properties::{layer, line, metadata, rider, trigger};
+pub use properties::{layer, line, metadata, rider};
 pub use rgb_color::RGBColor;
 pub use vec2::Vec2;
 
 use crate::track::{
+    group_builder_error::{GroupBuilderError, IntoGroupResult},
+    group_feature_access::GroupFeatureAccess,
     layer::layer_group::{LayerGroup, LayerGroupBuilder, LayerGroupBuilderError},
     line::line_group::{LineGroup, LineGroupBuilder, LineGroupBuilderError},
     metadata::{Metadata, MetadataBuilder, MetadataBuilderError},
     rider::rider_group::{RiderGroup, RiderGroupBuilder, RiderGroupBuilderError},
 };
 
-#[derive(Debug, Display, PartialEq, Eq, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TrackFeature {
     Riders,
     Layers,
@@ -33,12 +35,14 @@ pub enum TrackFeature {
 #[derive(Debug, Getters)]
 #[getset(get = "pub")]
 pub struct Track {
+    features: HashSet<TrackFeature>,
     metadata: Metadata,
     line_group: LineGroup,
     layer_group: Option<LayerGroup>,
     rider_group: Option<RiderGroup>,
 }
 
+#[derive(Default)]
 pub struct TrackBuilder {
     features: HashSet<TrackFeature>,
     line_group: LineGroupBuilder,
@@ -47,51 +51,21 @@ pub struct TrackBuilder {
     rider_group: Option<RiderGroupBuilder>,
 }
 
-impl Default for TrackBuilder {
-    fn default() -> Self {
-        Self {
-            features: HashSet::new(),
-            line_group: LineGroupBuilder::default(),
-            metadata: MetadataBuilder::default(),
-            layer_group: None,
-            rider_group: None,
-        }
-    }
+#[derive(Error, Debug)]
+pub enum TrackSubBuilderError {
+    #[error("{0}")]
+    LineGroupBuilderError(#[from] LineGroupBuilderError),
+    #[error("{0}")]
+    LayerGroupBuilderError(#[from] LayerGroupBuilderError),
+    #[error("{0}")]
+    RiderGroupBuilderError(#[from] RiderGroupBuilderError),
+    #[error("{0}")]
+    MetadataBuilderError(#[from] MetadataBuilderError),
 }
 
-impl FeatureFieldAccess<TrackFeature, TrackBuilderError> for TrackBuilder {
-    fn require_feature<'a, T>(
-        current_features: &HashSet<TrackFeature>,
-        field: &'a mut Option<T>,
-        feature: TrackFeature,
-    ) -> Result<&'a mut T, TrackBuilderError> {
-        if !current_features.contains(&feature) {
-            return Err(TrackBuilderError::MissingFeatureFlag(feature));
-        }
+pub type TrackBuilderError = GroupBuilderError<TrackFeature, TrackSubBuilderError>;
 
-        match field.as_mut() {
-            Some(some_field) => Ok(some_field),
-            None => unreachable!("{}", UNREACHABLE_MESSAGE),
-        }
-    }
-
-    fn check_feature<T>(
-        &self,
-        feature: TrackFeature,
-        field: &Option<T>,
-        attr_name: &'static str,
-    ) -> Result<(), TrackBuilderError> {
-        if self.features.contains(&feature) && field.is_none() {
-            return Err(TrackBuilderError::MissingAttribute(attr_name));
-        }
-
-        if !self.features.contains(&feature) && field.is_some() {
-            return Err(TrackBuilderError::MissingFeatureFlag(feature));
-        }
-
-        Ok(())
-    }
-}
+impl GroupFeatureAccess<TrackFeature, TrackSubBuilderError> for TrackBuilder {}
 
 impl TrackBuilder {
     pub fn new() -> Self {
@@ -120,58 +94,49 @@ impl TrackBuilder {
     }
 
     pub fn layer_group(&mut self) -> Result<&mut LayerGroupBuilder, TrackBuilderError> {
-        Ok(TrackBuilder::require_feature(
-            &self.features,
-            &mut self.layer_group,
-            TrackFeature::Layers,
-        )?)
+        Self::require_feature(&self.features, TrackFeature::Layers, &mut self.layer_group)
     }
 
     pub fn rider_group(&mut self) -> Result<&mut RiderGroupBuilder, TrackBuilderError> {
-        Ok(TrackBuilder::require_feature(
+        Ok(Self::require_feature(
             &self.features,
-            &mut self.rider_group,
             TrackFeature::Riders,
+            &mut self.rider_group,
         )?)
     }
 
     pub fn build(&mut self) -> Result<Track, TrackBuilderError> {
-        let metadata = self.metadata.build()?;
-        let line_group = self.line_group.build()?;
+        let metadata = self.metadata.build().map_group_err()?;
+        let line_group = self.line_group.build().map_group_err()?;
 
-        self.check_feature(TrackFeature::Layers, &self.layer_group, "layer_group")?;
+        Self::check_feature(
+            &self.features,
+            TrackFeature::Layers,
+            &self.layer_group,
+            "layer_group",
+        )?;
         let layer_group = match self.layer_group.as_mut() {
-            Some(layer_group_builder) => Some(layer_group_builder.build()?),
+            Some(layer_group_builder) => Some(layer_group_builder.build().map_group_err()?),
             None => None,
         };
 
-        self.check_feature(TrackFeature::Layers, &self.rider_group, "rider_group")?;
+        Self::check_feature(
+            &self.features,
+            TrackFeature::Layers,
+            &self.rider_group,
+            "rider_group",
+        )?;
         let rider_group = match self.rider_group.as_mut() {
-            Some(rider_group_builder) => Some(rider_group_builder.build()?),
+            Some(rider_group_builder) => Some(rider_group_builder.build().map_group_err()?),
             None => None,
         };
 
         Ok(Track {
+            features: self.features.clone(),
             metadata,
             line_group,
             layer_group,
             rider_group,
         })
     }
-}
-
-#[derive(Error, Debug)]
-pub enum TrackBuilderError {
-    #[error("Expected feature to be registered before passing feature data: {0}")]
-    MissingFeatureFlag(TrackFeature),
-    #[error("Expected feature data to be present because feature was enabled: {0}")]
-    MissingAttribute(&'static str),
-    #[error("{0}")]
-    LineGroupBuilderError(#[from] LineGroupBuilderError),
-    #[error("{0}")]
-    LayerGroupBuilderError(#[from] LayerGroupBuilderError),
-    #[error("{0}")]
-    RiderGroupBuilderError(#[from] RiderGroupBuilderError),
-    #[error("{0}")]
-    MetadataBuilderError(#[from] MetadataBuilderError),
 }

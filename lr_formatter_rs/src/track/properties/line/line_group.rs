@@ -1,11 +1,6 @@
-use std::{collections::HashSet, hash::Hash};
-
-use derive_more::Display;
-use getset::Getters;
-use thiserror::Error;
-
 use crate::track::{
-    FeatureFieldAccess, UNREACHABLE_MESSAGE,
+    group_builder_error::{GroupBuilderError, IntoGroupResult},
+    group_feature_access::GroupFeatureAccess,
     properties::line::{
         acceleration_line::{
             AccelerationLine, AccelerationLineBuilder, AccelerationLineBuilderError,
@@ -15,8 +10,12 @@ use crate::track::{
     },
     vec2::Vec2,
 };
+use derive_more::Display;
+use getset::Getters;
+use std::{collections::HashSet, hash::Hash};
+use thiserror::Error;
 
-#[derive(Debug, Display, PartialEq, Eq, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum LineFeature {
     SceneryWidth,
     AccelerationMultiplier,
@@ -26,11 +25,13 @@ pub enum LineFeature {
 #[derive(Debug, Getters)]
 #[getset(get = "pub")]
 pub struct LineGroup {
+    features: HashSet<LineFeature>,
     standard_lines: Vec<StandardLine>,
     acceleration_lines: Vec<AccelerationLine>,
     scenery_lines: Vec<SceneryLine>,
 }
 
+#[derive(Default)]
 pub struct LineGroupBuilder {
     features: HashSet<LineFeature>,
     standard_lines: Vec<StandardLineBuilder>,
@@ -38,52 +39,25 @@ pub struct LineGroupBuilder {
     scenery_lines: Vec<SceneryLineBuilder>,
 }
 
-impl Default for LineGroupBuilder {
-    fn default() -> Self {
-        Self {
-            features: HashSet::new(),
-            standard_lines: vec![],
-            acceleration_lines: vec![],
-            scenery_lines: vec![],
-        }
-    }
+#[derive(Debug, Error)]
+pub enum LineSubBuilderError {
+    #[error("{0}")]
+    StandardLine(#[from] StandardLineBuilderError),
+    #[error("{0}")]
+    AccelerationLine(#[from] AccelerationLineBuilderError),
+    #[error("{0}")]
+    SceneryLine(#[from] SceneryLineBuilderError),
 }
 
-impl FeatureFieldAccess<LineFeature, LineGroupBuilderError> for LineGroupBuilder {
-    fn require_feature<'a, F>(
-        current_features: &HashSet<LineFeature>,
-        field: &'a mut Option<F>,
-        feature: LineFeature,
-    ) -> Result<&'a mut F, LineGroupBuilderError> {
-        if !current_features.contains(&feature) {
-            return Err(LineGroupBuilderError::MissingFeatureFlag(feature));
-        }
+pub type LineGroupBuilderError = GroupBuilderError<LineFeature, LineSubBuilderError>;
 
-        match field.as_mut() {
-            Some(some_field) => Ok(some_field),
-            None => unreachable!("{}", UNREACHABLE_MESSAGE),
-        }
-    }
-
-    fn check_feature<T>(
-        &self,
-        feature: LineFeature,
-        field: &Option<T>,
-        attr_name: &'static str,
-    ) -> Result<(), LineGroupBuilderError> {
-        if self.features.contains(&feature) && field.is_none() {
-            return Err(LineGroupBuilderError::MissingAttribute(attr_name));
-        }
-
-        if !self.features.contains(&feature) && field.is_some() {
-            return Err(LineGroupBuilderError::MissingFeatureFlag(feature));
-        }
-
-        Ok(())
-    }
-}
+impl GroupFeatureAccess<LineFeature, LineSubBuilderError> for LineGroupBuilder {}
 
 impl LineGroupBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn enable_feature(&mut self, feature: LineFeature) -> &mut Self {
         self.features.insert(feature);
         self
@@ -164,13 +138,14 @@ impl LineGroupBuilder {
         let mut scenery_lines: Vec<SceneryLine> = vec![];
 
         for standard_line_builder in &self.standard_lines {
-            let standard_line = standard_line_builder.build()?;
+            let standard_line = standard_line_builder.build().map_group_err()?;
             standard_lines.push(standard_line);
         }
 
         for acceleration_line_builder in &self.acceleration_lines {
-            let acceleration_line = acceleration_line_builder.build()?;
-            self.check_feature(
+            let acceleration_line = acceleration_line_builder.build().map_group_err()?;
+            Self::check_feature(
+                &self.features,
                 LineFeature::AccelerationMultiplier,
                 &acceleration_line.multiplier(),
                 "multiplier",
@@ -179,29 +154,21 @@ impl LineGroupBuilder {
         }
 
         for scenery_line_builder in &self.scenery_lines {
-            let scenery_line = scenery_line_builder.build()?;
-            self.check_feature(LineFeature::SceneryWidth, &scenery_line.width(), "width")?;
+            let scenery_line = scenery_line_builder.build().map_group_err()?;
+            Self::check_feature(
+                &self.features,
+                LineFeature::SceneryWidth,
+                &scenery_line.width(),
+                "width",
+            )?;
             scenery_lines.push(scenery_line);
         }
 
         Ok(LineGroup {
+            features: self.features.clone(),
             standard_lines,
             acceleration_lines,
             scenery_lines,
         })
     }
-}
-
-#[derive(Error, Debug)]
-pub enum LineGroupBuilderError {
-    #[error("Expected feature to be registered before passing feature data: {0}")]
-    MissingFeatureFlag(LineFeature),
-    #[error("Expected feature data to be present because feature was enabled: {0}")]
-    MissingAttribute(&'static str),
-    #[error("{0}")]
-    StandardLineBuilderError(#[from] StandardLineBuilderError),
-    #[error("{0}")]
-    AccelerationLineBuilderError(#[from] AccelerationLineBuilderError),
-    #[error("{0}")]
-    SceneryLineBuilderError(#[from] SceneryLineBuilderError),
 }

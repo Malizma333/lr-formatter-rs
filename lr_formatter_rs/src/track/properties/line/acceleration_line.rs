@@ -1,9 +1,9 @@
 use crate::track::Vec2;
 use derive_builder::Builder;
-use getset::CopyGetters;
+use getset::CloneGetters;
 
-#[derive(CopyGetters, Debug, Builder)]
-#[getset(get_copy = "pub")]
+#[derive(CloneGetters, Debug, Builder)]
+#[getset(get_clone = "pub")]
 pub struct AccelerationLine {
     id: u32,
     #[getset(skip)]
@@ -11,7 +11,6 @@ pub struct AccelerationLine {
     flipped: bool,
     left_extension: bool,
     right_extension: bool,
-    #[builder(default)]
     multiplier: Option<f64>,
 }
 

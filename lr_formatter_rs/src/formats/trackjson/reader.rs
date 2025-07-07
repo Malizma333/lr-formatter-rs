@@ -48,16 +48,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                 }
             };
 
-            let endpoints = (
-                Vec2 {
-                    x: line.x1,
-                    y: line.y1,
-                },
-                Vec2 {
-                    x: line.x2,
-                    y: line.y2,
-                },
-            );
+            let endpoints = (Vec2::new(line.x1, line.y1), Vec2::new(line.x2, line.y2));
 
             let (left_extension, right_extension) = if line_type == LineType::Scenery {
                 (false, false)
@@ -118,7 +109,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         for line in line_list {
             match line {
                 LRAJsonArrayLine::Standard(id, x1, y1, x2, y2, extended, flipped) => {
-                    let endpoints = (Vec2 { x: x1, y: y1 }, Vec2 { x: x2, y: y2 });
+                    let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
                     let left_extension = extended & 0x1 != 0;
                     let right_extension = extended & 0x2 != 0;
                     track_builder.line_group().add_standard_line(
@@ -141,7 +132,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                     _,
                     multiplier,
                 ) => {
-                    let endpoints = (Vec2 { x: x1, y: y1 }, Vec2 { x: x2, y: y2 });
+                    let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
                     let left_extension = extended & 0x1 != 0;
                     let right_extension = extended & 0x2 != 0;
                     track_builder
@@ -156,7 +147,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         .multiplier(Some(multiplier as f64));
                 }
                 LRAJsonArrayLine::Scenery(id, x1, y1, x2, y2) => {
-                    let endpoints = (Vec2 { x: x1, y: y1 }, Vec2 { x: x2, y: y2 });
+                    let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
                     track_builder.line_group().add_scenery_line(id, endpoints)?;
                 }
             }
@@ -228,15 +219,8 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
             .enable_feature(RiderFeature::Remount)
             .enable_feature(RiderFeature::StartAngle);
         for rider in riders.iter() {
-            let start_position = Vec2 {
-                x: rider.start_pos.x,
-                y: rider.start_pos.y,
-            };
-            let start_velocity = Vec2 {
-                x: rider.start_vel.x,
-                y: rider.start_vel.y,
-            };
-
+            let start_position = Vec2::new(rider.start_pos.x, rider.start_pos.y);
+            let start_velocity = Vec2::new(rider.start_vel.x, rider.start_vel.y);
             let mut start_angle = 0.0;
             let mut can_remount = false;
 
@@ -264,10 +248,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         }
     }
 
-    track_builder.metadata().start_position(Vec2 {
-        x: json_track.start_pos.x,
-        y: json_track.start_pos.y,
-    });
+    track_builder
+        .metadata()
+        .start_position(Vec2::new(json_track.start_pos.x, json_track.start_pos.y));
 
     track_builder.metadata().title(json_track.label);
 
@@ -297,15 +280,19 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
             .gravity_well_size(gravity_well_size);
     }
 
-    let mut start_gravity = Vec2 { x: 0.0, y: 1.0 };
+    let start_gravity_x = if let Some(x_gravity) = json_track.x_gravity {
+        x_gravity as f64
+    } else {
+        0.0
+    };
 
-    if let Some(x_gravity) = json_track.x_gravity {
-        start_gravity.x = x_gravity as f64;
-    }
+    let start_gravity_y = if let Some(y_gravity) = json_track.y_gravity {
+        y_gravity as f64
+    } else {
+        1.0
+    };
 
-    if let Some(y_gravity) = json_track.y_gravity {
-        start_gravity.y = y_gravity as f64;
-    }
+    let start_gravity = Vec2::new(start_gravity_x, start_gravity_y);
 
     track_builder.metadata().start_gravity(start_gravity);
 
@@ -313,47 +300,51 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         track_builder.metadata().start_zoom(start_zoom as f64);
     }
 
-    let mut start_line_color = RGBColor {
-        red: 0,
-        green: 0,
-        blue: 0,
+    let init_line_red = if let Some(init_red) = json_track.line_color_red {
+        init_red as u8
+    } else {
+        0
     };
 
-    if let Some(initial_line_red) = json_track.line_color_red {
-        start_line_color.red = initial_line_red as u8;
-    }
-
-    if let Some(initial_line_green) = json_track.line_color_green {
-        start_line_color.green = initial_line_green as u8;
-    }
-
-    if let Some(initial_line_blue) = json_track.line_color_blue {
-        start_line_color.blue = initial_line_blue as u8;
-    }
-
-    track_builder.metadata().start_line_color(start_line_color);
-
-    let mut start_background_color = RGBColor {
-        red: 244,
-        green: 245,
-        blue: 249,
+    let init_line_green = if let Some(init_green) = json_track.line_color_green {
+        init_green as u8
+    } else {
+        0
     };
 
-    if let Some(initial_background_red) = json_track.background_color_red {
-        start_background_color.red = initial_background_red as u8;
-    }
+    let init_line_blue = if let Some(init_blue) = json_track.line_color_blue {
+        init_blue as u8
+    } else {
+        0
+    };
 
-    if let Some(initial_background_green) = json_track.background_color_green {
-        start_background_color.green = initial_background_green as u8;
-    }
+    track_builder.metadata().start_line_color(RGBColor::new(
+        init_line_red,
+        init_line_green,
+        init_line_blue,
+    ));
 
-    if let Some(initial_background_blue) = json_track.background_color_blue {
-        start_background_color.blue = initial_background_blue as u8;
-    }
+    let init_bg_red = if let Some(init_red) = json_track.background_color_red {
+        init_red as u8
+    } else {
+        244
+    };
+
+    let init_bg_green = if let Some(init_green) = json_track.background_color_green {
+        init_green as u8
+    } else {
+        245
+    };
+
+    let init_bg_blue = if let Some(init_blue) = json_track.background_color_blue {
+        init_blue as u8
+    } else {
+        249
+    };
 
     track_builder
         .metadata()
-        .start_background_color(start_background_color);
+        .start_background_color(RGBColor::new(init_bg_red, init_bg_green, init_bg_blue));
 
     // TODO: These fields need parsing into the internal format still
     // line_based_triggers, time_based_triggers

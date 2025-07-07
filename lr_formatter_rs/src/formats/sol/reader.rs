@@ -170,10 +170,9 @@ pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, TrackReadE
                 value: format!("{:?}", start_y_amf),
             })?;
 
-        track_builder.metadata().start_position(Vec2 {
-            x: start_pos_x,
-            y: start_pos_y,
-        });
+        track_builder
+            .metadata()
+            .start_position(Vec2::new(start_pos_x, start_pos_y));
     }
 
     if target_track.contains_key("trackData") {
@@ -337,7 +336,7 @@ pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, TrackReadE
                 }
             };
 
-            let endpoints = (Vec2 { x: x1, y: y1 }, Vec2 { x: x2, y: y2 });
+            let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
 
             match line_type {
                 LineType::Standard => {

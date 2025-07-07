@@ -117,10 +117,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
 
     let start_pos_x = cursor.read_f64::<LittleEndian>()?;
     let start_pos_y = cursor.read_f64::<LittleEndian>()?;
-    track_builder.metadata().start_position(Vec2 {
-        x: start_pos_x,
-        y: start_pos_y,
-    });
+    track_builder
+        .metadata()
+        .start_position(Vec2::new(start_pos_x, start_pos_y));
 
     let line_count = cursor.read_u32::<LittleEndian>()?;
 
@@ -182,16 +181,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         let line_y1 = cursor.read_f64::<LittleEndian>()?;
         let line_x2 = cursor.read_f64::<LittleEndian>()?;
         let line_y2 = cursor.read_f64::<LittleEndian>()?;
-        let endpoints = (
-            Vec2 {
-                x: line_x1,
-                y: line_y1,
-            },
-            Vec2 {
-                x: line_x2,
-                y: line_y2,
-            },
-        );
+        let endpoints = (Vec2::new(line_x1, line_y1), Vec2::new(line_x2, line_y2));
         let left_ext = line_ext & 0x1 != 0;
         let right_ext = line_ext & 0x2 != 0;
 
@@ -258,18 +248,15 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     let num_entries = cursor.read_u16::<LittleEndian>()?;
 
     let mut start_zoom = 4.0;
-    let mut start_gravity = Vec2 { x: 0.0, y: 1.0 };
+    let mut start_gravity_x = 0.0;
+    let mut start_gravity_y = 1.0;
     let mut gravity_well_size = 10.0;
-    let mut start_background_color = RGBColor {
-        red: 244,
-        green: 245,
-        blue: 249,
-    };
-    let mut start_line_color = RGBColor {
-        red: 0,
-        green: 0,
-        blue: 0,
-    };
+    let mut start_line_color_red = 0;
+    let mut start_line_color_green = 0;
+    let mut start_line_color_blue = 0;
+    let mut start_bg_color_red = 244;
+    let mut start_bg_color_green = 245;
+    let mut start_bg_color_blue = 249;
 
     for _ in 0..num_entries {
         let meta_string = parse_string::<LittleEndian>(&mut cursor, StringLength::U16)?;
@@ -290,31 +277,31 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                 start_zoom = value.parse::<f32>()? as f64;
             }
             FEATURE_X_GRAVITY => {
-                start_gravity.x = value.parse::<f32>()? as f64;
+                start_gravity_x = value.parse::<f32>()? as f64;
             }
             FEATURE_Y_GRAVITY => {
-                start_gravity.y = value.parse::<f32>()? as f64;
+                start_gravity_y = value.parse::<f32>()? as f64;
             }
             FEATURE_GRAVITY_WELL_SIZE => {
                 gravity_well_size = value.parse::<f64>()?;
             }
             FEATURE_BACKGROUND_COLOR_R => {
-                start_background_color.red = value.parse::<i32>()? as u8;
+                start_bg_color_red = value.parse::<i32>()? as u8;
             }
             FEATURE_BACKGROUND_COLOR_G => {
-                start_background_color.green = value.parse::<i32>()? as u8;
+                start_bg_color_green = value.parse::<i32>()? as u8;
             }
             FEATURE_BACKGROUND_COLOR_B => {
-                start_background_color.blue = value.parse::<i32>()? as u8;
+                start_bg_color_blue = value.parse::<i32>()? as u8;
             }
             FEATURE_LINE_COLOR_R => {
-                start_line_color.red = value.parse::<i32>()? as u8;
+                start_line_color_red = value.parse::<i32>()? as u8;
             }
             FEATURE_LINE_COLOR_G => {
-                start_line_color.green = value.parse::<i32>()? as u8;
+                start_line_color_green = value.parse::<i32>()? as u8;
             }
             FEATURE_LINE_COLOR_B => {
-                start_line_color.blue = value.parse::<i32>()? as u8;
+                start_line_color_blue = value.parse::<i32>()? as u8;
             }
             FEATURE_TRIGGERS => {
                 for (i, trigger) in value.split('&').filter(|s| !s.is_empty()).enumerate() {
@@ -369,14 +356,24 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     }
 
     track_builder.metadata().start_zoom(start_zoom);
-    track_builder.metadata().start_gravity(start_gravity);
+    track_builder
+        .metadata()
+        .start_gravity(Vec2::new(start_gravity_x, start_gravity_y));
     track_builder
         .metadata()
         .gravity_well_size(gravity_well_size);
     track_builder
         .metadata()
-        .start_background_color(start_background_color);
-    track_builder.metadata().start_line_color(start_line_color);
+        .start_background_color(RGBColor::new(
+            start_bg_color_red,
+            start_bg_color_green,
+            start_bg_color_blue,
+        ));
+    track_builder.metadata().start_line_color(RGBColor::new(
+        start_line_color_red,
+        start_line_color_green,
+        start_line_color_blue,
+    ));
 
     Ok(track_builder.build()?)
 }

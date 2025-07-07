@@ -35,7 +35,7 @@ pub(in crate::formats::lrb) static SIMLINE: Lazy<ModHandler> = Lazy::new(|| ModH
             let flipped = line_flags & FLAG_INVERTED != 0;
             let left_extension = line_flags & FLAG_LEFT_EXTENSION != 0;
             let right_extension = line_flags & FLAG_RIGHT_EXTENSION != 0;
-            let endpoints = (Vec2 { x: x1, y: y1 }, Vec2 { x: x2, y: y2 });
+            let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
             if line_flags & FLAG_RED != 0 {
                 track_builder.line_group().add_acceleration_line(
                     id,

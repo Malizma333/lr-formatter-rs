@@ -15,18 +15,18 @@ pub struct StandardLine {
 
 impl StandardLine {
     pub fn x1(&self) -> f64 {
-        self.endpoints.0.x
+        self.endpoints.0.x()
     }
 
     pub fn y1(&self) -> f64 {
-        self.endpoints.0.y
+        self.endpoints.0.y()
     }
 
     pub fn x2(&self) -> f64 {
-        self.endpoints.1.x
+        self.endpoints.1.x()
     }
 
     pub fn y2(&self) -> f64 {
-        self.endpoints.1.y
+        self.endpoints.1.y()
     }
 }

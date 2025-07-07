@@ -104,12 +104,12 @@ pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
     let start_position = if let Some(start_pos) = track.metadata().start_position() {
         start_pos
     } else {
-        Vec2 { x: 0.0, y: 0.0 }
+        Vec2::new(0.0, 0.0)
     };
 
     let mut array_start_position = HashMap::new();
-    array_start_position.insert("0".to_string(), Amf0Value::Number(start_position.x));
-    array_start_position.insert("1".to_string(), Amf0Value::Number(start_position.y));
+    array_start_position.insert("0".to_string(), Amf0Value::Number(start_position.x()));
+    array_start_position.insert("1".to_string(), Amf0Value::Number(start_position.y()));
 
     let mut first_null_array = HashMap::new();
     first_null_array.insert("0".to_string(), Amf0Value::Null);

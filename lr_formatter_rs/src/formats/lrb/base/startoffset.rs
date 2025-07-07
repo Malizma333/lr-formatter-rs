@@ -13,7 +13,7 @@ pub(in crate::formats::lrb) static STARTOFFSET: Lazy<ModHandler> = Lazy::new(|| 
     read: Box::new(|cursor, track_builder| {
         let x = cursor.read_f64::<LittleEndian>()?;
         let y = cursor.read_f64::<LittleEndian>()?;
-        track_builder.metadata().start_position(Vec2 { x, y });
+        track_builder.metadata().start_position(Vec2::new(x, y));
 
         Ok(())
     }),
@@ -21,9 +21,9 @@ pub(in crate::formats::lrb) static STARTOFFSET: Lazy<ModHandler> = Lazy::new(|| 
         let start_position = track
             .metadata()
             .start_position()
-            .unwrap_or(Vec2 { x: 0.0, y: 0.0 });
-        cursor.write_f64::<LittleEndian>(start_position.x)?;
-        cursor.write_f64::<LittleEndian>(start_position.y)?;
+            .unwrap_or(Vec2::new(0.0, 0.0));
+        cursor.write_f64::<LittleEndian>(start_position.x())?;
+        cursor.write_f64::<LittleEndian>(start_position.y())?;
         Ok(())
     }),
 });

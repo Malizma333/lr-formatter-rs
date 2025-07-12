@@ -1,6 +1,9 @@
 use crate::track::{
-    group_builder_error::{GroupBuilderError, IntoGroupResult},
-    group_feature_access::GroupFeatureAccess,
+    group_builder::{
+        group_builder_base::{GroupBuilder, GroupBuilderBase},
+        group_builder_error::{GroupBuilderError, IntoGroupResult},
+        group_builder_macro::define_group_builder,
+    },
     properties::line::{
         acceleration_line::{
             AccelerationLine, AccelerationLineBuilder, AccelerationLineBuilderError,
@@ -10,59 +13,59 @@ use crate::track::{
     },
     vec2::Vec2,
 };
-use derive_more::Display;
-use getset::Getters;
-use std::{collections::HashSet, hash::Hash};
-use thiserror::Error;
+use std::collections::HashSet;
 
-#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum LineFeature {
+define_group_builder!(
+  enum LineFeature {
     SceneryWidth,
     AccelerationMultiplier,
     SinglePrecisionSceneryWidth,
+  }
+
+  struct LineGroup {
+    standard_lines: Vec<StandardLine>, Vec<StandardLineBuilder>, StandardLineBuilderError,
+    acceleration_lines: Vec<AccelerationLine>, Vec<AccelerationLineBuilder>, AccelerationLineBuilderError,
+    scenery_lines: Vec<SceneryLine>, Vec<SceneryLineBuilder>, SceneryLineBuilderError,
+  }
+);
+
+impl GroupBuilder for LineGroupBuilder {
+    fn build(&mut self) -> Result<Self::Output, GroupBuilderError<Self::Feature, Self::SubError>> {
+        let mut standard_lines: Vec<StandardLine> = vec![];
+        let mut acceleration_lines: Vec<AccelerationLine> = vec![];
+        let mut scenery_lines: Vec<SceneryLine> = vec![];
+
+        for standard_line_builder in &self.standard_lines {
+            let standard_line = standard_line_builder.build().map_group_err()?;
+            standard_lines.push(standard_line);
+        }
+
+        for acceleration_line_builder in &self.acceleration_lines {
+            let acceleration_line = acceleration_line_builder.build().map_group_err()?;
+            self.check_feature(
+                LineFeature::AccelerationMultiplier,
+                &acceleration_line.multiplier(),
+                "multiplier",
+            )?;
+            acceleration_lines.push(acceleration_line);
+        }
+
+        for scenery_line_builder in &self.scenery_lines {
+            let scenery_line = scenery_line_builder.build().map_group_err()?;
+            self.check_feature(LineFeature::SceneryWidth, &scenery_line.width(), "width")?;
+            scenery_lines.push(scenery_line);
+        }
+
+        Ok(LineGroup {
+            features: self.features.clone(),
+            standard_lines,
+            acceleration_lines,
+            scenery_lines,
+        })
+    }
 }
-
-#[derive(Debug, Getters)]
-#[getset(get = "pub")]
-pub struct LineGroup {
-    features: HashSet<LineFeature>,
-    standard_lines: Vec<StandardLine>,
-    acceleration_lines: Vec<AccelerationLine>,
-    scenery_lines: Vec<SceneryLine>,
-}
-
-#[derive(Default)]
-pub struct LineGroupBuilder {
-    features: HashSet<LineFeature>,
-    standard_lines: Vec<StandardLineBuilder>,
-    acceleration_lines: Vec<AccelerationLineBuilder>,
-    scenery_lines: Vec<SceneryLineBuilder>,
-}
-
-#[derive(Debug, Error)]
-pub enum LineSubBuilderError {
-    #[error("{0}")]
-    StandardLine(#[from] StandardLineBuilderError),
-    #[error("{0}")]
-    AccelerationLine(#[from] AccelerationLineBuilderError),
-    #[error("{0}")]
-    SceneryLine(#[from] SceneryLineBuilderError),
-}
-
-pub type LineGroupBuilderError = GroupBuilderError<LineFeature, LineSubBuilderError>;
-
-impl GroupFeatureAccess<LineFeature, LineSubBuilderError> for LineGroupBuilder {}
 
 impl LineGroupBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn enable_feature(&mut self, feature: LineFeature) -> &mut Self {
-        self.features.insert(feature);
-        self
-    }
-
     pub fn add_standard_line(
         &mut self,
         id: u32,
@@ -130,45 +133,5 @@ impl LineGroupBuilder {
 
     pub fn get_scenery_lines(&mut self) -> impl Iterator<Item = &mut SceneryLineBuilder> {
         self.scenery_lines.iter_mut()
-    }
-
-    pub fn build(&mut self) -> Result<LineGroup, LineGroupBuilderError> {
-        let mut standard_lines: Vec<StandardLine> = vec![];
-        let mut acceleration_lines: Vec<AccelerationLine> = vec![];
-        let mut scenery_lines: Vec<SceneryLine> = vec![];
-
-        for standard_line_builder in &self.standard_lines {
-            let standard_line = standard_line_builder.build().map_group_err()?;
-            standard_lines.push(standard_line);
-        }
-
-        for acceleration_line_builder in &self.acceleration_lines {
-            let acceleration_line = acceleration_line_builder.build().map_group_err()?;
-            Self::check_feature(
-                &self.features,
-                LineFeature::AccelerationMultiplier,
-                &acceleration_line.multiplier(),
-                "multiplier",
-            )?;
-            acceleration_lines.push(acceleration_line);
-        }
-
-        for scenery_line_builder in &self.scenery_lines {
-            let scenery_line = scenery_line_builder.build().map_group_err()?;
-            Self::check_feature(
-                &self.features,
-                LineFeature::SceneryWidth,
-                &scenery_line.width(),
-                "width",
-            )?;
-            scenery_lines.push(scenery_line);
-        }
-
-        Ok(LineGroup {
-            features: self.features.clone(),
-            standard_lines,
-            acceleration_lines,
-            scenery_lines,
-        })
     }
 }

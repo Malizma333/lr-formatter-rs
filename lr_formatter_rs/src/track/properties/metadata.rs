@@ -1,80 +1,61 @@
 use derive_builder::Builder;
-use getset::{CloneGetters, CopyGetters};
+use getset::{CloneGetters, Getters};
 
 use crate::track::{GridVersion, RGBColor, Vec2};
 
-// TODO: replace bool props with feature set
-
-#[derive(CopyGetters, CloneGetters, Debug, Builder)]
+#[derive(Getters, CloneGetters, Debug, Builder)]
 pub struct Metadata {
     // Shared Properties
-    #[builder(default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     grid_version: GridVersion,
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     start_position: Option<Vec2>,
 
     // Linerider.com Properties
     #[builder(setter(strip_option, into), default)]
-    #[getset(get_clone = "pub")]
+    #[getset(get = "pub")]
     title: Option<String>,
     #[builder(setter(strip_option, into), default)]
-    #[getset(get_clone = "pub")]
+    #[getset(get = "pub")]
     artist: Option<String>,
     #[builder(setter(strip_option, into), default)]
-    #[getset(get_clone = "pub")]
+    #[getset(get = "pub")]
     description: Option<String>,
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     duration: Option<u32>,
     #[builder(setter(strip_option, into), default)]
-    #[getset(get_clone = "pub")]
+    #[getset(get = "pub")]
     script: Option<String>,
 
     // LRA+ Properties
-    #[builder(default)]
-    #[getset(get_copy = "pub")]
-    use_legacy_remount: bool,
-    #[builder(default)]
-    #[getset(get_copy = "pub")]
-    use_legacy_fakie: bool,
-    #[builder(default)]
-    #[getset(get_copy = "pub")]
-    zero_friction_riders: bool,
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
-    gravity_well_size: Option<f64>,
-    // TODO: Edit properties on rider group in solver
-    #[builder(default)]
-    #[getset(get_copy = "pub")]
-    zero_start: bool,
-    #[builder(default)]
-    #[getset(get_copy = "pub")]
-    remount: bool,
-    #[builder(setter(strip_option, into), default)]
     #[getset(get_clone = "pub")]
+    gravity_well_size: Option<f64>,
+    #[builder(setter(strip_option, into), default)]
+    #[getset(get = "pub")]
     audio_filename: Option<String>,
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     audio_offset_until_start: Option<f64>,
 
     // Flash Properties
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     start_line: Option<u32>,
 
     // Triggers
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     start_zoom: Option<f64>,
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     start_gravity: Option<Vec2>,
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     start_line_color: Option<RGBColor>,
     #[builder(setter(strip_option), default)]
-    #[getset(get_copy = "pub")]
+    #[getset(get_clone = "pub")]
     start_background_color: Option<RGBColor>,
 }

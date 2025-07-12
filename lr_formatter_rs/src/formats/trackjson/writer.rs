@@ -1,8 +1,10 @@
-use super::{JsonLayer, JsonLine, JsonRider, JsonTrack, V2};
 use crate::{
     formats::{
         TrackWriteError,
-        trackjson::{FaultyU32, LAYER_TYPE_FOLDER, LAYER_TYPE_LAYER},
+        trackjson::{
+            FaultyU32, JsonLayer, JsonLine, JsonRider, JsonTrack, LAYER_TYPE_FOLDER,
+            LAYER_TYPE_LAYER, V2,
+        },
     },
     track::{GridVersion, Track},
 };
@@ -144,10 +146,16 @@ pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
         V2 { x: 0.0, y: 0.0 }
     };
 
-    let label = track.metadata().title().unwrap_or("".to_string());
-    let creator = Some(track.metadata().artist().unwrap_or("".to_string()));
-    let description = Some(track.metadata().description().unwrap_or("".to_string()));
-    let script = Some(track.metadata().script().unwrap_or("".to_string()));
+    let label = track.metadata().title().clone().unwrap_or("".to_string());
+    let creator = Some(track.metadata().artist().clone().unwrap_or("".to_string()));
+    let description = Some(
+        track
+            .metadata()
+            .description()
+            .clone()
+            .unwrap_or("".to_string()),
+    );
+    let script = Some(track.metadata().script().clone().unwrap_or("".to_string()));
     let duration = Some(track.metadata().duration().unwrap_or(1200));
 
     let track = JsonTrack {

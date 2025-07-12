@@ -1,6 +1,5 @@
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy)]
 pub enum GridVersion {
-    #[default]
     V6_2,
     V6_1,
     V6_0,

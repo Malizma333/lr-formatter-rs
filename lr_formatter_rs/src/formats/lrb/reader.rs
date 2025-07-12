@@ -1,14 +1,14 @@
 use super::{SUPPORTED_MODS, mod_flags};
 use crate::{
     formats::TrackReadError,
-    track::{Track, TrackBuilder},
+    track::{GroupBuilder, Track, TrackBuilder},
     util::{self, StringLength, parse_string},
 };
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
 pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
-    let track_builder = &mut TrackBuilder::new();
+    let track_builder = &mut TrackBuilder::default();
     let mut cursor = Cursor::new(data);
 
     // Magic number

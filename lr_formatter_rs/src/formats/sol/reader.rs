@@ -3,12 +3,12 @@ use std::io::{Cursor, Read};
 
 use crate::{
     formats::{TrackReadError, sol::amf0::deserialize},
-    track::{GridVersion, LineType, Track, TrackBuilder, Vec2},
+    track::{GridVersion, GroupBuilder, LineType, Track, TrackBuilder, TrackFeature, Vec2},
     util::{StringLength, bytes_to_hex_string, parse_string},
 };
 
 pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, TrackReadError> {
-    let track_builder = &mut TrackBuilder::new();
+    let track_builder = &mut TrackBuilder::default();
     let data_size = data.len() as u64;
     let mut cursor = Cursor::new(data);
 
@@ -176,7 +176,7 @@ pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, TrackReadE
     }
 
     if target_track.contains_key("trackData") {
-        track_builder.metadata().zero_start(true);
+        track_builder.enable_feature(TrackFeature::ZeroVelocityStartRiders);
     }
 
     if let Some(val) = target_track.get("data") {

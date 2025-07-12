@@ -1,19 +1,17 @@
 use crate::{
     formats::{
         TrackReadError,
-        trackjson::{FaultyU32, LRAJsonArrayLine},
+        trackjson::{FaultyU32, JsonTrack, LRAJsonArrayLine},
     },
     track::{
-        GridVersion, LineType, RGBColor, Track, TrackBuilder, TrackFeature, Vec2,
+        GridVersion, GroupBuilder, LineType, RGBColor, Track, TrackBuilder, TrackFeature, Vec2,
         layer::layer_group::LayerFeature, line::line_group::LineFeature,
         rider::rider_group::RiderFeature,
     },
 };
 
-use super::JsonTrack;
-
 pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
-    let track_builder = &mut TrackBuilder::new();
+    let track_builder = &mut TrackBuilder::default();
     let json_string = String::from_utf8(data.to_vec())?;
     let json_track: JsonTrack =
         serde_json::from_str(&json_string).map_err(|err| TrackReadError::Other {
@@ -213,7 +211,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     }
 
     if let Some(riders) = json_track.riders {
-        track_builder.enable_feature(TrackFeature::Riders);
+        track_builder.enable_feature(TrackFeature::RiderProperties);
         track_builder
             .rider_group()?
             .enable_feature(RiderFeature::Remount)
@@ -271,7 +269,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     }
 
     if let Some(zero_start) = json_track.zero_start {
-        track_builder.metadata().zero_start(zero_start);
+        if zero_start {
+            track_builder.enable_feature(TrackFeature::ZeroVelocityStartRiders);
+        }
     }
 
     if let Some(gravity_well_size) = json_track.gravity_well_size {

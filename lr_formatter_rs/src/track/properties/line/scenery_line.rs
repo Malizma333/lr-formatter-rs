@@ -4,7 +4,7 @@ use getset::CloneGetters;
 
 // TODO make mod for f32 vecs
 
-#[derive(CloneGetters, Debug, Builder)]
+#[derive(CloneGetters, Builder)]
 #[getset(get_clone = "pub")]
 pub struct SceneryLine {
     id: u32,

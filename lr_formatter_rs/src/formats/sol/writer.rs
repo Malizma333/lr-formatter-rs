@@ -9,7 +9,7 @@ use crate::{
         TrackWriteError,
         sol::amf0::{Amf0Value, serialize},
     },
-    track::{GridVersion, Track, Vec2},
+    track::{GridVersion, Track, TrackFeature, Vec2},
 };
 
 pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
@@ -131,11 +131,14 @@ pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
     let label = if let Some(title) = track.metadata().title() {
         title
     } else {
-        "".to_string()
+        ""
     };
 
     let mut sol_track = HashMap::new();
-    sol_track.insert("label".to_string(), Amf0Value::Utf8String(label));
+    sol_track.insert(
+        "label".to_string(),
+        Amf0Value::Utf8String(label.to_string()),
+    );
     sol_track.insert(
         "version".to_string(),
         Amf0Value::Utf8String(string_grid_version),
@@ -147,7 +150,10 @@ pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
     sol_track.insert("level".to_string(), Amf0Value::Number(line_count));
     sol_track.insert("data".to_string(), Amf0Value::ECMAArray(line_array_object));
 
-    if track.metadata().zero_start() {
+    if track
+        .features()
+        .contains(&TrackFeature::ZeroVelocityStartRiders)
+    {
         sol_track.insert("trackData".to_string(), Amf0Value::ECMAArray(track_data));
     }
 

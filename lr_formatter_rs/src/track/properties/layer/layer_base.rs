@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use getset::CloneGetters;
 
-#[derive(CloneGetters, Debug, Builder)]
+#[derive(CloneGetters, Builder)]
 #[getset(get_clone = "pub")]
 pub struct Layer {
     id: u32,

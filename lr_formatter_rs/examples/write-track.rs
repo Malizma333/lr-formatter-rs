@@ -1,9 +1,13 @@
-use lr_formatter_rs::{formats::trackjson, track::TrackBuilder};
+use lr_formatter_rs::{
+    formats::trackjson,
+    track::{GridVersion, GroupBuilder, TrackBuilder},
+};
 use std::{fs::File, io::Write};
 
 fn main() {
     // Construct a new track
-    let mut track_builder = TrackBuilder::new();
+    let mut track_builder = TrackBuilder::default();
+    track_builder.metadata().grid_version(GridVersion::V6_2);
     track_builder.metadata().title("New track");
     track_builder.metadata().artist("Me");
     let track = track_builder.build().unwrap();

@@ -1,85 +1,43 @@
 use crate::track::{
-    group_builder_error::{GroupBuilderError, IntoGroupResult},
-    group_feature_access::GroupFeatureAccess,
+    GroupBuilderBase,
+    group_builder::{
+        group_builder_base::GroupBuilder,
+        group_builder_error::{GroupBuilderError, IntoGroupResult},
+        group_builder_macro::define_group_builder,
+    },
     properties::rider::rider_base::{Rider, RiderBuilder, RiderBuilderError},
 };
-use derive_more::Display;
-use getset::Getters;
 use std::collections::HashSet;
-use thiserror::Error;
 
-#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum RiderFeature {
-    StartVelocity,
-    StartAngle,
-    Remount,
-}
-
-#[derive(Debug, Getters)]
-#[getset(get = "pub")]
-pub struct RiderGroup {
-    features: HashSet<RiderFeature>,
-    riders: Vec<Rider>,
-}
-
-#[derive(Default)]
-pub struct RiderGroupBuilder {
-    features: HashSet<RiderFeature>,
-    riders: Vec<RiderBuilder>,
-}
-
-#[derive(Debug, Error)]
-pub enum RiderSubBuilderError {
-    #[error("{0}")]
-    Rider(#[from] RiderBuilderError),
-}
-
-pub type RiderGroupBuilderError = GroupBuilderError<RiderFeature, RiderSubBuilderError>;
-
-impl GroupFeatureAccess<RiderFeature, RiderSubBuilderError> for RiderGroupBuilder {}
-
-impl RiderGroupBuilder {
-    pub fn new() -> Self {
-        Self::default()
+define_group_builder! (
+    enum RiderFeature {
+        StartVelocity,
+        StartAngle,
+        Remount,
     }
 
-    pub fn enable_feature(&mut self, feature: RiderFeature) -> &mut Self {
-        self.features.insert(feature);
-        self
+    struct RiderGroup {
+        riders: Vec<Rider>, Vec<RiderBuilder>, RiderBuilderError,
     }
+);
 
-    pub fn add_rider(&mut self) -> &mut RiderBuilder {
-        self.riders.push(RiderBuilder::default().to_owned());
-        self.riders.last_mut().unwrap()
-    }
-
-    pub fn get_riders(&mut self) -> impl Iterator<Item = &mut RiderBuilder> {
-        self.riders.iter_mut()
-    }
-
-    pub fn build(&mut self) -> Result<RiderGroup, RiderGroupBuilderError> {
+impl GroupBuilder for RiderGroupBuilder {
+    fn build(&mut self) -> Result<Self::Output, GroupBuilderError<Self::Feature, Self::SubError>> {
         let mut riders: Vec<Rider> = vec![];
 
         for rider_builder in &self.riders {
             let rider = rider_builder.build().map_group_err()?;
-            Self::check_feature(
-                &self.features,
+            self.check_feature(
                 RiderFeature::StartVelocity,
                 &rider.start_velocity(),
                 "start_velocity",
             )?;
-            Self::check_feature(
-                &self.features,
+            self.check_feature(
                 RiderFeature::StartAngle,
                 &rider.start_angle(),
                 "start_angle",
             )?;
-            Self::check_feature(
-                &self.features,
-                RiderFeature::Remount,
-                &rider.can_remount(),
-                "can_remount",
-            )?;
+            self.check_feature(RiderFeature::Remount, &rider.can_remount(), "can_remount")?;
             riders.push(rider);
         }
 
@@ -87,5 +45,16 @@ impl RiderGroupBuilder {
             features: self.features.clone(),
             riders,
         })
+    }
+}
+
+impl RiderGroupBuilder {
+    pub fn add_rider(&mut self) -> &mut RiderBuilder {
+        self.riders.push(RiderBuilder::default().to_owned());
+        self.riders.last_mut().unwrap()
+    }
+
+    pub fn get_riders(&mut self) -> impl Iterator<Item = &mut RiderBuilder> {
+        self.riders.iter_mut()
     }
 }

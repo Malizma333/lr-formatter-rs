@@ -16,7 +16,8 @@ use crate::{
         },
     },
     track::{
-        GridVersion, LineType, RGBColor, Track, TrackBuilder, Vec2, line::line_group::LineFeature,
+        GridVersion, GroupBuilder, LineType, RGBColor, Track, TrackBuilder, TrackFeature, Vec2,
+        line::line_group::LineFeature,
     },
     util::{StringLength, bytes_to_hex_string, parse_string},
 };
@@ -27,7 +28,7 @@ use super::{
 };
 
 pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
-    let track_builder = &mut TrackBuilder::new();
+    let track_builder = &mut TrackBuilder::default();
 
     let mut cursor = Cursor::new(data);
 
@@ -211,18 +212,17 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         line.id(max_id);
     }
 
-    track_builder
-        .metadata()
-        .zero_friction_riders(included_features.contains(FEATURE_FRICTIONLESS));
+    if included_features.contains(FEATURE_FRICTIONLESS) {
+        track_builder.enable_feature(TrackFeature::ZeroFrictionRiders);
+    }
 
     if included_features.contains(FEATURE_REMOUNT) {
-        track_builder.metadata().remount(true);
-        // TODO: Should this also be set?
-        track_builder.metadata().use_legacy_remount(true);
+        track_builder.enable_feature(TrackFeature::RemountRiders);
+        track_builder.enable_feature(TrackFeature::UseLRARemount);
     }
 
     if included_features.contains(FEATURE_ZERO_START) {
-        track_builder.metadata().zero_start(true);
+        track_builder.enable_feature(TrackFeature::ZeroVelocityStartRiders);
     }
 
     let current = cursor.stream_position()?;

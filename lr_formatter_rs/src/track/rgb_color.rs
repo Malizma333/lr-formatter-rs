@@ -1,7 +1,7 @@
-use getset::CopyGetters;
+use getset::CloneGetters;
 
-#[derive(Debug, Clone, Copy, CopyGetters)]
-#[getset(get_copy = "pub")]
+#[derive(Debug, Clone, Copy, CloneGetters)]
+#[getset(get_clone = "pub")]
 pub struct RGBColor {
     red: u8,
     green: u8,

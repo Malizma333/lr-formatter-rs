@@ -11,6 +11,7 @@ pub struct AccelerationLine {
     flipped: bool,
     left_extension: bool,
     right_extension: bool,
+    #[builder(setter(strip_option), default)]
     multiplier: Option<f64>,
 }
 

@@ -4,7 +4,7 @@ A basic command line interface that demonstrates using the Line Rider formatter 
 
 ```bash
 # Windows
-build/windows/track-converter.exe ./samples/sample_three_lines.track.json lrb
+build/windows/track-converter.exe ./samples/HAM.trk lrb
 # Linux
-build/linux/track-converter ./samples/sample_three_lines.track.json lrb
+build/linux/track-converter ./samples/HAM.trk lrb
 ```

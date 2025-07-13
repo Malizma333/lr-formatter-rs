@@ -10,6 +10,7 @@ pub struct SceneryLine {
     id: u32,
     #[getset(skip)]
     endpoints: (Vec2, Vec2),
+    #[builder(setter(strip_option), default)]
     width: Option<f64>,
 }
 

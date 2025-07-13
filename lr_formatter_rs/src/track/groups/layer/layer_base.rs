@@ -6,8 +6,12 @@ use getset::CloneGetters;
 pub struct Layer {
     id: u32,
     index: usize,
+    #[builder(setter(strip_option), default)]
     name: Option<String>,
+    #[builder(setter(strip_option), default)]
     visible: Option<bool>,
+    #[builder(setter(strip_option), default)]
     editable: Option<bool>,
+    #[builder(setter(strip_option), default)]
     folder_id: Option<Option<u32>>,
 }

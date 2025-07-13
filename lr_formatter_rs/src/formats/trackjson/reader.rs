@@ -71,7 +71,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                     )?;
                 }
                 LineType::Acceleration => {
-                    if !line.multiplier.is_none_or(|x| x == 1.0) {
+                    if !line.multiplier.is_none() {
                         track_builder
                             .line_group()
                             .enable_feature(LineFeature::AccelerationMultiplier);
@@ -85,10 +85,10 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                             left_extension,
                             right_extension,
                         )?
-                        .multiplier(line.multiplier);
+                        .multiplier(line.multiplier.unwrap_or(1.0));
                 }
                 LineType::Scenery => {
-                    if !line.width.is_none_or(|x| x == 1.0) {
+                    if !line.width.is_none() {
                         track_builder
                             .line_group()
                             .enable_feature(LineFeature::SceneryWidth);
@@ -96,7 +96,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                     track_builder
                         .line_group()
                         .add_scenery_line(line.id, endpoints)?
-                        .width(line.width);
+                        .width(line.width.unwrap_or(1.0));
                 }
             }
         }
@@ -142,7 +142,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                             left_extension,
                             right_extension,
                         )?
-                        .multiplier(Some(multiplier as f64));
+                        .multiplier(multiplier as f64);
                 }
                 LRAJsonArrayLine::Scenery(id, x1, y1, x2, y2) => {
                     let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
@@ -184,7 +184,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                 track_builder
                     .layer_group()?
                     .enable_feature(LayerFeature::Folders);
-                layer_is_folder = false;
+                layer_is_folder = true;
                 layer_folder_size = size;
             }
 
@@ -193,19 +193,19 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                     .layer_group()?
                     .add_layer(layer.id, index)?
                     .index(index)
-                    .name(Some(layer.name.to_string()))
-                    .visible(Some(layer.visible))
-                    .editable(Some(layer_editable))
-                    .folder_id(Some(layer_folder_id));
+                    .name(layer.name.to_string())
+                    .visible(layer.visible)
+                    .editable(layer_editable)
+                    .folder_id(layer_folder_id);
             } else {
                 track_builder
                     .layer_group()?
                     .add_layer_folder(layer.id, index)?
                     .index(index)
-                    .name(Some(layer.name.to_string()))
-                    .visible(Some(layer.visible))
-                    .editable(Some(layer_editable))
-                    .size(Some(layer_folder_size));
+                    .name(layer.name.to_string())
+                    .visible(layer.visible)
+                    .editable(layer_editable)
+                    .size(layer_folder_size);
             }
         }
     }
@@ -240,9 +240,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                 .rider_group()?
                 .add_rider()
                 .start_position(start_position)
-                .start_velocity(Some(start_velocity))
-                .start_angle(Some(start_angle))
-                .can_remount(Some(can_remount));
+                .start_velocity(start_velocity)
+                .start_angle(start_angle)
+                .can_remount(can_remount);
         }
     }
 

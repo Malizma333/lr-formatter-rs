@@ -146,17 +146,17 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         let line_inv = (flags >> 7) != 0;
         let line_ext = (flags >> 5) & 0x3;
 
-        let mut line_multiplier: Option<f64> = None;
-        let mut line_scenery_width: Option<f64> = None;
+        let mut line_multiplier = 1.0;
+        let mut line_scenery_width = 1.0;
 
         if line_type == LineType::Acceleration && included_features.contains(FEATURE_RED_MULTIPLIER)
         {
-            line_multiplier = Some(cursor.read_u8()? as f64);
+            line_multiplier = cursor.read_u8()? as f64;
         }
 
         if line_type == LineType::Scenery {
             if included_features.contains(FEATURE_SCENERY_WIDTH) {
-                line_scenery_width = Some(cursor.read_u8()? as f64 / 10.0);
+                line_scenery_width = cursor.read_u8()? as f64 / 10.0;
             }
         } else {
             line_id = cursor.read_u32::<LittleEndian>()?;

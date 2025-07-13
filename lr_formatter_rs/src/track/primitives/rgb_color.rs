@@ -10,7 +10,7 @@ pub struct RGBColor {
 
 impl RGBColor {
     pub fn new(red: u8, green: u8, blue: u8) -> Self {
-        RGBColor { red, green, blue }
+        Self { red, green, blue }
     }
 
     pub fn to_css_string(&self) -> String {

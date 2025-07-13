@@ -5,7 +5,7 @@ use crate::track::{
         group_builder_error::{GroupBuilderError, IntoGroupResult},
         group_builder_macro::define_group_builder,
     },
-    properties::layer::{
+    groups::layer::{
         layer_base::{Layer, LayerBuilder, LayerBuilderError},
         layer_folder::{LayerFolder, LayerFolderBuilder, LayerFolderBuilderError},
     },

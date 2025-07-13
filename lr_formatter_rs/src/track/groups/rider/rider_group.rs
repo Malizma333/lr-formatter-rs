@@ -5,7 +5,7 @@ use crate::track::{
         group_builder_error::{GroupBuilderError, IntoGroupResult},
         group_builder_macro::define_group_builder,
     },
-    properties::rider::rider_base::{Rider, RiderBuilder, RiderBuilderError},
+    groups::rider::rider_base::{Rider, RiderBuilder, RiderBuilderError},
 };
 use std::collections::HashSet;
 

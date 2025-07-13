@@ -1,17 +1,17 @@
 use crate::track::{
+    Vec2,
     group_builder::{
         group_builder_base::{GroupBuilder, GroupBuilderBase},
         group_builder_error::{GroupBuilderError, IntoGroupResult},
         group_builder_macro::define_group_builder,
     },
-    properties::line::{
+    groups::line::{
         acceleration_line::{
             AccelerationLine, AccelerationLineBuilder, AccelerationLineBuilderError,
         },
         scenery_line::{SceneryLine, SceneryLineBuilder, SceneryLineBuilderError},
         standard_line::{StandardLine, StandardLineBuilder, StandardLineBuilderError},
     },
-    vec2::Vec2,
 };
 use std::collections::HashSet;
 

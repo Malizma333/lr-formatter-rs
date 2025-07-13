@@ -39,23 +39,21 @@ pub struct Metadata {
     #[builder(setter(strip_option), default)]
     #[getset(get_clone = "pub")]
     audio_offset_until_start: Option<f64>,
-
-    // Flash Properties
-    #[builder(setter(strip_option), default)]
-    #[getset(get_clone = "pub")]
-    start_line: Option<u32>,
-
-    // Triggers
-    #[builder(setter(strip_option), default)]
-    #[getset(get_clone = "pub")]
-    start_zoom: Option<f64>,
     #[builder(setter(strip_option), default)]
     #[getset(get_clone = "pub")]
     start_gravity: Option<Vec2>,
+    #[builder(setter(strip_option), default)]
+    #[getset(get_clone = "pub")]
+    start_zoom: Option<f64>,
     #[builder(setter(strip_option), default)]
     #[getset(get_clone = "pub")]
     start_line_color: Option<RGBColor>,
     #[builder(setter(strip_option), default)]
     #[getset(get_clone = "pub")]
     start_background_color: Option<RGBColor>,
+
+    // Flash Properties
+    #[builder(setter(strip_option), default)]
+    #[getset(get_clone = "pub")]
+    start_line: Option<u32>,
 }

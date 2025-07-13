@@ -16,8 +16,9 @@ use crate::{
         },
     },
     track::{
-        GridVersion, GroupBuilder, LineType, RGBColor, Track, TrackBuilder, TrackFeature, Vec2,
-        line::line_group::LineFeature,
+        BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, GroupBuilder,
+        LineColorEvent, LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, TrackFeature,
+        Vec2, line::line_group::LineFeature,
     },
     util::{StringLength, bytes_to_hex_string, parse_string},
 };
@@ -148,9 +149,6 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         let mut line_multiplier: Option<f64> = None;
         let mut line_scenery_width: Option<f64> = None;
 
-        let mut line_zoom_target: Option<f32> = None;
-        let mut line_zoom_frames: Option<i16> = None;
-
         if line_type == LineType::Acceleration && included_features.contains(FEATURE_RED_MULTIPLIER)
         {
             line_multiplier = Some(cursor.read_u8()? as f64);
@@ -161,20 +159,28 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                 line_scenery_width = Some(cursor.read_u8()? as f64 / 10.0);
             }
         } else {
-            if included_features.contains(FEATURE_IGNORABLE_TRIGGER) {
-                let has_zoom_trigger = cursor.read_u8()?;
-                if has_zoom_trigger == 1 {
-                    line_zoom_target = Some(cursor.read_f32::<LittleEndian>()?);
-                    line_zoom_frames = Some(cursor.read_i16::<LittleEndian>()?);
-                }
-            }
-
             line_id = cursor.read_u32::<LittleEndian>()?;
             max_id = max_id.max(line_id);
 
             if line_ext != 0 {
                 _ = cursor.read_i32::<LittleEndian>()?; // Prev line id or -1
                 _ = cursor.read_i32::<LittleEndian>()?; // Next line id or -1
+            }
+
+            if included_features.contains(FEATURE_IGNORABLE_TRIGGER) {
+                let has_zoom_trigger = cursor.read_u8()?;
+                if has_zoom_trigger == 1 {
+                    let target_zoom = cursor.read_f32::<LittleEndian>()? as f64;
+                    let length = cursor.read_i16::<LittleEndian>()? as u32;
+                    let zoom_event = CameraZoomEvent::new(target_zoom);
+                    let line_hit = LineHitTrigger::new(line_id, length);
+                    track_builder.enable_feature(TrackFeature::LegacyCameraZoomTriggers);
+                    track_builder
+                        .legacy_camera_zoom_group()?
+                        .add_trigger()
+                        .trigger(line_hit)
+                        .event(zoom_event);
+                }
             }
         }
 
@@ -317,25 +323,51 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                     match values[0] {
                         "0" => {
                             // Zoom
-                            let target_zoom = values[1].parse::<f32>()?;
-                            let start_frame = values[2].parse::<i32>()?;
-                            let end_frame = values[3].parse::<i32>()?;
+                            let target_zoom = values[1].parse::<f32>()? as f64;
+                            let start_frame = values[2].parse::<i32>()? as u32;
+                            let end_frame = values[3].parse::<i32>()? as u32;
+                            let zoom_event = CameraZoomEvent::new(target_zoom);
+                            let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
+                            track_builder.enable_feature(TrackFeature::CameraZoomTriggers);
+                            track_builder
+                                .camera_zoom_group()?
+                                .add_trigger()
+                                .trigger(frame_bounds)
+                                .event(zoom_event);
                         }
                         "1" => {
                             // Background Color
-                            let red = values[1].parse::<i32>()?;
-                            let green = values[2].parse::<i32>()?;
-                            let blue = values[3].parse::<i32>()?;
-                            let start_frame = values[4].parse::<i32>()?;
-                            let end_frame = values[5].parse::<i32>()?;
+                            let red = values[1].parse::<i32>()? as u8;
+                            let green = values[2].parse::<i32>()? as u8;
+                            let blue = values[3].parse::<i32>()? as u8;
+                            let start_frame = values[4].parse::<i32>()? as u32;
+                            let end_frame = values[5].parse::<i32>()? as u32;
+                            let bg_color_event =
+                                BackgroundColorEvent::new(RGBColor::new(red, green, blue));
+                            let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
+                            track_builder.enable_feature(TrackFeature::BackgroundColorTriggers);
+                            track_builder
+                                .background_color_group()?
+                                .add_trigger()
+                                .trigger(frame_bounds)
+                                .event(bg_color_event);
                         }
                         "2" => {
                             // Line Color
-                            let target_line_red = values[1].parse::<i32>()?;
-                            let target_line_green = values[2].parse::<i32>()?;
-                            let target_line_blue = values[3].parse::<i32>()?;
-                            let start_frame = values[4].parse::<i32>()?;
-                            let end_frame = values[5].parse::<i32>()?;
+                            let red = values[1].parse::<i32>()? as u8;
+                            let green = values[2].parse::<i32>()? as u8;
+                            let blue = values[3].parse::<i32>()? as u8;
+                            let start_frame = values[4].parse::<i32>()? as u32;
+                            let end_frame = values[5].parse::<i32>()? as u32;
+                            let line_color_event =
+                                LineColorEvent::new(RGBColor::new(red, green, blue));
+                            let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
+                            track_builder.enable_feature(TrackFeature::LineColorTriggers);
+                            track_builder
+                                .line_color_group()?
+                                .add_trigger()
+                                .trigger(frame_bounds)
+                                .event(line_color_event);
                         }
                         other => {
                             return Err(TrackReadError::InvalidData {

@@ -11,9 +11,9 @@ use crate::track::{
 };
 use std::collections::HashSet;
 
-type LineColorTrigger = TriggeredEvent<LineColorEvent, FrameBoundsTrigger>;
-type LineColorTriggerBuilder = TriggeredEventBuilder<LineColorEvent, FrameBoundsTrigger>;
-type LineColorTriggerBuilderError = TriggeredEventBuilderError;
+pub type LineColorTrigger = TriggeredEvent<LineColorEvent, FrameBoundsTrigger>;
+pub type LineColorTriggerBuilder = TriggeredEventBuilder<LineColorEvent, FrameBoundsTrigger>;
+pub type LineColorTriggerBuilderError = TriggeredEventBuilderError;
 
 define_group_builder! (
     enum LineColorFeature { }

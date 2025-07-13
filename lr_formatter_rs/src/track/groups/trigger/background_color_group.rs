@@ -11,10 +11,10 @@ use crate::track::{
 };
 use std::collections::HashSet;
 
-type BackgroundColorTrigger = TriggeredEvent<BackgroundColorEvent, FrameBoundsTrigger>;
-type BackgroundColorTriggerBuilder =
+pub type BackgroundColorTrigger = TriggeredEvent<BackgroundColorEvent, FrameBoundsTrigger>;
+pub type BackgroundColorTriggerBuilder =
     TriggeredEventBuilder<BackgroundColorEvent, FrameBoundsTrigger>;
-type BackgroundColorTriggerBuilderError = TriggeredEventBuilderError;
+pub type BackgroundColorTriggerBuilderError = TriggeredEventBuilderError;
 
 define_group_builder! (
     enum BackgroundColorFeature { }

@@ -11,7 +11,7 @@ pub use group_builder::{
     group_builder_base::{GroupBuilder, GroupBuilderBase},
     group_builder_error::{GroupBuilderError, IntoGroupResult},
 };
-pub use groups::{layer, line, metadata, rider};
+pub use groups::{layer, line, metadata, rider, trigger};
 pub use line_type::LineType;
 pub use primitives::{
     BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, FrameReachedTrigger, LineColorEvent,

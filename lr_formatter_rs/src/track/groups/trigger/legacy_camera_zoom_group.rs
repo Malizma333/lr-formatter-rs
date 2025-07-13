@@ -11,9 +11,9 @@ use crate::track::{
 };
 use std::collections::HashSet;
 
-type LegacyCameraZoomTrigger = TriggeredEvent<CameraZoomEvent, LineHitTrigger>;
-type LegacyCameraZoomTriggerBuilder = TriggeredEventBuilder<CameraZoomEvent, LineHitTrigger>;
-type LegacyCameraZoomTriggerBuilderError = TriggeredEventBuilderError;
+pub type LegacyCameraZoomTrigger = TriggeredEvent<CameraZoomEvent, LineHitTrigger>;
+pub type LegacyCameraZoomTriggerBuilder = TriggeredEventBuilder<CameraZoomEvent, LineHitTrigger>;
+pub type LegacyCameraZoomTriggerBuilderError = TriggeredEventBuilderError;
 
 define_group_builder! (
     enum LegacyCameraZoomFeature { }

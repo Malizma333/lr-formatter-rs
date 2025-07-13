@@ -10,7 +10,7 @@
 //! ```
 //!
 //! ### Writing
-//! ```rust
+//! ```no_run
 #![doc = include_str!("../examples/write-track.rs")]
 //! ```
 

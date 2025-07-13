@@ -14,9 +14,8 @@ fn main() {
 
     // Write the track
     let output_data = trackjson::write(&track).unwrap();
-    // Commented out for doc-test
-    // File::create("new_track.track.json")
-    //     .unwrap()
-    //     .write_all(&output_data)
-    //     .unwrap();
+    File::create("new_track.track.json")
+        .unwrap()
+        .write_all(&output_data)
+        .unwrap();
 }

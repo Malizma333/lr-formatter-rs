@@ -40,11 +40,6 @@ define_group_builder!(
     enum TrackFeature {
         RiderProperties,
         Layers,
-        UseLRARemount,
-        UseLegacyFakie, // TODO more descriptive name
-        ZeroFrictionRiders,
-        ZeroVelocityStartRiders,
-        RemountRiders,
         BackgroundColorTriggers,
         LineColorTriggers,
         CameraZoomTriggers,

@@ -51,6 +51,21 @@ pub struct Metadata {
     #[builder(setter(strip_option), default)]
     #[getset(get_clone = "pub")]
     start_background_color: Option<RGBColor>,
+    #[builder(default)]
+    #[getset(get_clone = "pub")]
+    lra_remount: bool,
+    #[builder(default)]
+    #[getset(get_clone = "pub")]
+    legacy_fakie: bool, // TODO more descriptive name
+    #[builder(default)]
+    #[getset(get_clone = "pub")]
+    zero_friction_riders: bool,
+    #[builder(default)]
+    #[getset(get_clone = "pub")]
+    zero_velocity_start_riders: bool,
+    #[builder(default)]
+    #[getset(get_clone = "pub")]
+    remount_riders: bool,
 
     // Flash Properties
     #[builder(setter(strip_option), default)]

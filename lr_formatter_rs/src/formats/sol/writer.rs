@@ -9,7 +9,7 @@ use crate::{
         TrackWriteError,
         sol::amf0::{Amf0Value, serialize},
     },
-    track::{GridVersion, Track, TrackFeature, Vec2},
+    track::{GridVersion, Track, Vec2},
 };
 
 pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
@@ -150,10 +150,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
     sol_track.insert("level".to_string(), Amf0Value::Number(line_count));
     sol_track.insert("data".to_string(), Amf0Value::ECMAArray(line_array_object));
 
-    if track
-        .features()
-        .contains(&TrackFeature::ZeroVelocityStartRiders)
-    {
+    if track.metadata().zero_velocity_start_riders() {
         sol_track.insert("trackData".to_string(), Amf0Value::ECMAArray(track_data));
     }
 

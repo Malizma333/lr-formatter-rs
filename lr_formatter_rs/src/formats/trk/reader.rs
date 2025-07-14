@@ -219,16 +219,16 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     }
 
     if included_features.contains(FEATURE_FRICTIONLESS) {
-        track_builder.enable_feature(TrackFeature::ZeroFrictionRiders);
+        track_builder.metadata().zero_friction_riders(true);
     }
 
     if included_features.contains(FEATURE_REMOUNT) {
-        track_builder.enable_feature(TrackFeature::RemountRiders);
-        track_builder.enable_feature(TrackFeature::UseLRARemount);
+        track_builder.metadata().remount_riders(true);
+        track_builder.metadata().lra_remount(true);
     }
 
     if included_features.contains(FEATURE_ZERO_START) {
-        track_builder.enable_feature(TrackFeature::ZeroVelocityStartRiders);
+        track_builder.metadata().zero_velocity_start_riders(true);
     }
 
     let current = cursor.stream_position()?;

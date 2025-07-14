@@ -270,7 +270,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
 
     if let Some(zero_start) = json_track.zero_start {
         if zero_start {
-            track_builder.enable_feature(TrackFeature::ZeroVelocityStartRiders);
+            track_builder.metadata().zero_velocity_start_riders(true);
         }
     }
 

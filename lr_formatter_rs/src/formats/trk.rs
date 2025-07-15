@@ -2,9 +2,11 @@
 
 mod error;
 mod reader;
+mod warning;
 
 pub use error::TrkReadError;
 pub use reader::read;
+pub use warning::TrkReadWarning;
 
 // These string literals are implementation-specific, do not modify
 const FEATURE_RED_MULTIPLIER: &str = "REDMULTIPLIER";
@@ -26,3 +28,25 @@ const FEATURE_LINE_COLOR_R: &str = "LINECOLORR";
 const FEATURE_LINE_COLOR_G: &str = "LINECOLORG";
 const FEATURE_LINE_COLOR_B: &str = "LINECOLORB";
 const FEATURE_TRIGGERS: &str = "TRIGGERS";
+
+const SUPPORTED_FEATURES: [&str; 19] = [
+    FEATURE_RED_MULTIPLIER,
+    FEATURE_SCENERY_WIDTH,
+    FEATURE_SONG_INFO,
+    FEATURE_IGNORABLE_TRIGGER,
+    FEATURE_6_1,
+    FEATURE_ZERO_START,
+    FEATURE_REMOUNT,
+    FEATURE_FRICTIONLESS,
+    FEATURE_START_ZOOM,
+    FEATURE_X_GRAVITY,
+    FEATURE_Y_GRAVITY,
+    FEATURE_GRAVITY_WELL_SIZE,
+    FEATURE_BACKGROUND_COLOR_R,
+    FEATURE_BACKGROUND_COLOR_G,
+    FEATURE_BACKGROUND_COLOR_B,
+    FEATURE_LINE_COLOR_R,
+    FEATURE_LINE_COLOR_G,
+    FEATURE_LINE_COLOR_B,
+    FEATURE_TRIGGERS,
+];

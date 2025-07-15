@@ -1,6 +1,6 @@
 use super::{SUPPORTED_MODS, mod_flags};
 use crate::{
-    formats::lrb::LrbReadError,
+    formats::lrb::{LrbReadError, LrbReadWarning, UnsupportedModWarning},
     track::{Track, TrackBuilder},
     util::{self, StringLength, parse_string},
 };
@@ -10,6 +10,8 @@ use std::io::{Cursor, Read, Seek, SeekFrom};
 pub fn read(data: Vec<u8>) -> Result<Track, LrbReadError> {
     let track_builder = &mut TrackBuilder::default();
     let mut cursor = Cursor::new(data);
+
+    let mut warnings = vec![];
 
     // Magic number
     let mut magic_number = [0u8; 3];
@@ -65,19 +67,19 @@ pub fn read(data: Vec<u8>) -> Result<Track, LrbReadError> {
             // Return an error if we don't support the mod but it's required
             return Err(LrbReadError::UnsupportedRequiredMod { name, version });
         } else {
-            // TODO: Attach warning about unsupported mod not being included
-
-            // println!("[WARNING] This mod is not supported: {} v{}", name, version);
+            let mut warning = UnsupportedModWarning::new(name, version);
 
             if flags & mod_flags::SCENERY != 0 {
-                // println!("Ignoring it may affect scenery rendering.");
+                warning.scenery();
             }
             if flags & mod_flags::CAMERA != 0 {
-                // println!("Ignoring it may affect camera functionality.");
+                warning.camera();
             }
             if flags & mod_flags::PHYSICS != 0 {
-                // println!("Ignoring it may affect track physics.");
+                warning.physics();
             }
+
+            warnings.push(LrbReadWarning::UnsupportedMod(warning));
         }
     }
 

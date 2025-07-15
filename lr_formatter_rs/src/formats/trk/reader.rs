@@ -10,7 +10,8 @@ use crate::{
         FEATURE_BACKGROUND_COLOR_B, FEATURE_BACKGROUND_COLOR_G, FEATURE_BACKGROUND_COLOR_R,
         FEATURE_FRICTIONLESS, FEATURE_GRAVITY_WELL_SIZE, FEATURE_LINE_COLOR_B,
         FEATURE_LINE_COLOR_G, FEATURE_REMOUNT, FEATURE_START_ZOOM, FEATURE_TRIGGERS,
-        FEATURE_X_GRAVITY, FEATURE_Y_GRAVITY, FEATURE_ZERO_START, TrkReadError,
+        FEATURE_X_GRAVITY, FEATURE_Y_GRAVITY, FEATURE_ZERO_START, SUPPORTED_FEATURES, TrkReadError,
+        TrkReadWarning,
     },
     track::{
         BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
@@ -29,8 +30,8 @@ use super::{
 
 pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
     let track_builder = &mut TrackBuilder::default();
-
     let mut cursor = Cursor::new(data);
+    let mut warnings = vec![];
 
     // Magic number
     let mut magic_number = [0u8; 4];
@@ -58,7 +59,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
 
     for feature in feature_string.split(';').filter(|s| !s.is_empty()) {
         included_features.insert(feature);
-        // TODO: Attach warning if feature not accounted for
+        if !SUPPORTED_FEATURES.contains(&feature) {
+            warnings.push(TrkReadWarning::UnsupportedFeature(feature.to_string()));
+        }
     }
 
     let grid_version = if included_features.contains(FEATURE_6_1) {
@@ -364,10 +367,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
                 }
             }
             other => {
-                return Err(TrkReadError::InvalidData {
-                    name: "metadata key".to_string(),
-                    value: other.to_string(),
-                });
+                warnings.push(TrkReadWarning::UnsupportedFeature(other.to_string()));
             }
         }
     }

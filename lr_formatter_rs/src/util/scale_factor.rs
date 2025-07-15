@@ -4,14 +4,12 @@ pub fn from_lra_zoom(zoom: f32) -> f64 {
     f64::log(f64::from(zoom), 2.0)
 }
 
-pub fn to_lra_zoom(zoom: f64) -> f64 {
-    f64::powf(2.0, zoom)
-}
-
+#[allow(dead_code)]
 pub fn from_lrweb_gravity(gravity: Vec2) -> Vec2 {
     Vec2::new(gravity.x() / 0.175, gravity.y() / 0.175)
 }
 
+#[allow(dead_code)]
 pub fn to_lrweb_gravity(gravity: Vec2) -> Vec2 {
     Vec2::new(gravity.x() * 0.175, gravity.y() * 0.175)
 }

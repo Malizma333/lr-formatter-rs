@@ -5,10 +5,14 @@ mod common;
 mod error;
 mod mod_flags;
 mod reader;
+mod unsupported_warning;
+mod warning;
 mod writer;
 
 pub use error::{LrbReadError, LrbWriteError};
 pub use reader::read;
+pub use unsupported_warning::UnsupportedModWarning;
+pub use warning::LrbReadWarning;
 pub use writer::write;
 
 use crate::track::{Track, TrackBuilder};

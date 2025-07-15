@@ -7,7 +7,6 @@ use std::{
 use thiserror::Error;
 
 use crate::{
-    formats::sol::{Amf0DeserializationError, Amf0SerializationError},
     track::{
         TrackBuilderError, layer::layer_group::LayerGroupBuilderError,
         line::line_group::LineGroupBuilderError, rider::rider_group::RiderGroupBuilderError,
@@ -26,8 +25,6 @@ pub enum JsonReadError {
     #[error("{0}")]
     StringParsing(#[from] ParseLengthPrefixedStringError),
     #[error("{0}")]
-    Amf0Deserialization(#[from] Amf0DeserializationError),
-    #[error("{0}")]
     TrackBuilderError(#[from] TrackBuilderError),
     #[error("{0}")]
     LineGroupBuilderError(#[from] LineGroupBuilderError),
@@ -35,13 +32,13 @@ pub enum JsonReadError {
     RiderGroupBuilderError(#[from] RiderGroupBuilderError),
     #[error("{0}")]
     LayerGroupBuilderError(#[from] LayerGroupBuilderError),
+    // TODO maybe remove this
+    #[error("Invalid value for `{name}`: {value}")]
+    InvalidData { name: String, value: String },
     #[error("{0}")]
     FromUTF8Error(#[from] FromUtf8Error),
     #[error("{0}")]
     SerdeJsonError(#[from] serde_json::Error),
-    // TODO maybe remove this
-    #[error("Invalid value for `{name}`: {value}")]
-    InvalidData { name: String, value: String },
 }
 
 #[derive(Error, Debug)]
@@ -50,8 +47,6 @@ pub enum JsonWriteError {
     Io(#[from] io::Error),
     #[error("{0}")]
     IntConversion(#[from] TryFromIntError),
-    #[error("{0}")]
-    Amf0Serialization(#[from] Amf0SerializationError),
     #[error("{0}")]
     SerdeJsonError(#[from] serde_json::Error),
 }

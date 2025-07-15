@@ -1,7 +1,6 @@
 use std::{
     io,
     num::{ParseFloatError, ParseIntError, TryFromIntError},
-    string::FromUtf8Error,
 };
 
 use thiserror::Error;
@@ -26,8 +25,6 @@ pub enum SolReadError {
     #[error("{0}")]
     StringParsing(#[from] ParseLengthPrefixedStringError),
     #[error("{0}")]
-    Amf0Deserialization(#[from] Amf0DeserializationError),
-    #[error("{0}")]
     TrackBuilderError(#[from] TrackBuilderError),
     #[error("{0}")]
     LineGroupBuilderError(#[from] LineGroupBuilderError),
@@ -35,11 +32,11 @@ pub enum SolReadError {
     RiderGroupBuilderError(#[from] RiderGroupBuilderError),
     #[error("{0}")]
     LayerGroupBuilderError(#[from] LayerGroupBuilderError),
-    #[error("{0}")]
-    FromUTF8Error(#[from] FromUtf8Error),
     // TODO maybe remove this
     #[error("Invalid value for `{name}`: {value}")]
     InvalidData { name: String, value: String },
+    #[error("{0}")]
+    Amf0Deserialization(#[from] Amf0DeserializationError),
 }
 
 #[derive(Error, Debug)]

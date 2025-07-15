@@ -1,7 +1,6 @@
 use std::{
     io,
     num::{ParseFloatError, ParseIntError},
-    string::FromUtf8Error,
 };
 
 use thiserror::Error;
@@ -32,8 +31,6 @@ pub enum TrkReadError {
     RiderGroupBuilderError(#[from] RiderGroupBuilderError),
     #[error("{0}")]
     LayerGroupBuilderError(#[from] LayerGroupBuilderError),
-    #[error("{0}")]
-    FromUTF8Error(#[from] FromUtf8Error),
     // TODO maybe remove this
     #[error("Invalid value for `{name}`: {value}")]
     InvalidData { name: String, value: String },

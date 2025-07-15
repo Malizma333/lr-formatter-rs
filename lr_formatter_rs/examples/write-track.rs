@@ -1,6 +1,6 @@
 use lr_formatter_rs::{
     formats::trackjson,
-    track::{GridVersion, GroupBuilder, TrackBuilder},
+    track::{GridVersion, TrackBuilder},
 };
 use std::{fs::File, io::Write};
 

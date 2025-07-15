@@ -43,7 +43,7 @@ pub(in crate::formats::lrb) static SIMLINE: Lazy<ModHandler> = Lazy::new(|| ModH
                     flipped,
                     left_extension,
                     right_extension,
-                )?;
+                );
             } else {
                 track_builder.line_group().add_standard_line(
                     id,
@@ -51,7 +51,7 @@ pub(in crate::formats::lrb) static SIMLINE: Lazy<ModHandler> = Lazy::new(|| ModH
                     flipped,
                     left_extension,
                     right_extension,
-                )?;
+                );
             }
         }
 

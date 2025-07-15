@@ -7,10 +7,7 @@ mod primitives;
 use std::collections::HashSet;
 
 pub use grid_version::GridVersion;
-pub use group_builder::{
-    group_builder_base::{GroupBuilder, GroupBuilderBase},
-    group_builder_error::{GroupBuilderError, IntoGroupResult},
-};
+pub use group_builder::group_builder_error::{GroupBuilderError, IntoGroupResult};
 pub use groups::{layer, line, metadata, rider, trigger};
 pub use line_type::LineType;
 pub use primitives::{
@@ -19,7 +16,10 @@ pub use primitives::{
 };
 
 use crate::track::{
-    group_builder::group_builder_macro::define_group_builder,
+    group_builder::{
+        group_builder_base::{GroupBuilder, GroupBuilderBase},
+        group_builder_macro::define_group_builder,
+    },
     groups::trigger::{
         background_color_group::{
             BackgroundColorGroup, BackgroundColorGroupBuilder, BackgroundColorGroupBuilderError,
@@ -59,73 +59,62 @@ define_group_builder!(
 );
 
 impl GroupBuilder for TrackBuilder {
-    fn enable_feature(&mut self, feature: TrackFeature) -> &mut Self {
-        if feature == TrackFeature::Layers && self.layer_group.is_none() {
-            self.layer_group = Some(LayerGroupBuilder::default());
-        }
-
-        if feature == TrackFeature::RiderProperties && self.rider_group.is_none() {
-            self.rider_group = Some(RiderGroupBuilder::default());
-        }
-
-        self.features.insert(feature);
-        self
-    }
-
-    fn build(&mut self) -> Result<Track, TrackBuilderError> {
+    fn build_group(&mut self) -> Result<Track, TrackBuilderError> {
         let metadata = self.metadata.build().map_group_err()?;
-        let line_group = self.line_group.build().map_group_err()?;
+        let line_group = self.line_group.build_group().map_group_err()?;
 
-        self.check_feature(TrackFeature::Layers, &self.layer_group, "layer_group")?;
+        // self.check_feature(TrackFeature::Layers, &self.layer_group, "layer_group")?;
         let layer_group = match self.layer_group.as_mut() {
-            Some(layer_group_builder) => Some(layer_group_builder.build().map_group_err()?),
+            Some(layer_group_builder) => Some(layer_group_builder.build_group().map_group_err()?),
             None => None,
         };
 
-        self.check_feature(TrackFeature::Layers, &self.rider_group, "rider_group")?;
+        // self.check_feature(TrackFeature::Layers, &self.rider_group, "rider_group")?;
         let rider_group = match self.rider_group.as_mut() {
-            Some(rider_group_builder) => Some(rider_group_builder.build().map_group_err()?),
+            Some(rider_group_builder) => Some(rider_group_builder.build_group().map_group_err()?),
             None => None,
         };
 
-        self.check_feature(
-            TrackFeature::BackgroundColorTriggers,
-            &self.background_color_group,
-            "background_color_group",
-        )?;
+        // self.check_feature(
+        //     TrackFeature::BackgroundColorTriggers,
+        //     &self.background_color_group,
+        //     "background_color_group",
+        // )?;
         let background_color_group = match self.background_color_group.as_mut() {
-            Some(background_color_group) => Some(background_color_group.build().map_group_err()?),
+            Some(background_color_group) => {
+                Some(background_color_group.build_group().map_group_err()?)
+            }
             None => None,
         };
 
-        self.check_feature(
-            TrackFeature::LineColorTriggers,
-            &self.line_color_group,
-            "line_color_group",
-        )?;
+        // self.check_feature(
+        //     TrackFeature::LineColorTriggers,
+        //     &self.line_color_group,
+        //     "line_color_group",
+        // )?;
         let line_color_group = match self.line_color_group.as_mut() {
-            Some(line_color_group) => Some(line_color_group.build().map_group_err()?),
+            Some(line_color_group) => Some(line_color_group.build_group().map_group_err()?),
             None => None,
         };
 
-        self.check_feature(
-            TrackFeature::CameraZoomTriggers,
-            &self.camera_zoom_group,
-            "camera_zoom_group",
-        )?;
+        // self.check_feature(
+        //     TrackFeature::CameraZoomTriggers,
+        //     &self.camera_zoom_group,
+        //     "camera_zoom_group",
+        // )?;
         let camera_zoom_group = match self.camera_zoom_group.as_mut() {
-            Some(camera_zoom_group) => Some(camera_zoom_group.build().map_group_err()?),
+            Some(camera_zoom_group) => Some(camera_zoom_group.build_group().map_group_err()?),
             None => None,
         };
 
-        self.check_feature(
-            TrackFeature::LegacyCameraZoomTriggers,
-            &self.legacy_camera_zoom_group,
-            "legacy_camera_zoom_group",
-        )?;
+        // self.check_feature(
+        //     TrackFeature::LegacyCameraZoomTriggers,
+        //     &self.legacy_camera_zoom_group,
+        //     "legacy_camera_zoom_group",
+        // )?;
         let legacy_camera_zoom_group = match self.legacy_camera_zoom_group.as_mut() {
             Some(legacy_camera_zoom_group) => {
-                Some(legacy_camera_zoom_group.build().map_group_err()?)
+                Some(legacy_camera_zoom_group.build_group().map_group_err()?)
             }
             None => None,
         };
@@ -153,51 +142,61 @@ impl TrackBuilder {
         &mut self.line_group
     }
 
-    pub fn layer_group(&mut self) -> Result<&mut LayerGroupBuilder, TrackBuilderError> {
-        Self::require_feature(&self.features, TrackFeature::Layers, &mut self.layer_group)
+    pub fn layer_group(&mut self) -> &mut LayerGroupBuilder {
+        Self::require_feature(
+            &mut self.features,
+            TrackFeature::Layers,
+            &mut self.layer_group,
+            LayerGroupBuilder::default(),
+        )
     }
 
-    pub fn rider_group(&mut self) -> Result<&mut RiderGroupBuilder, TrackBuilderError> {
-        Ok(Self::require_feature(
-            &self.features,
+    pub fn rider_group(&mut self) -> &mut RiderGroupBuilder {
+        Self::require_feature(
+            &mut self.features,
             TrackFeature::RiderProperties,
             &mut self.rider_group,
-        )?)
+            RiderGroupBuilder::default(),
+        )
     }
 
-    pub fn background_color_group(
-        &mut self,
-    ) -> Result<&mut BackgroundColorGroupBuilder, TrackBuilderError> {
-        Ok(Self::require_feature(
-            &self.features,
+    pub fn background_color_group(&mut self) -> &mut BackgroundColorGroupBuilder {
+        Self::require_feature(
+            &mut self.features,
             TrackFeature::BackgroundColorTriggers,
             &mut self.background_color_group,
-        )?)
+            BackgroundColorGroupBuilder::default(),
+        )
     }
 
-    pub fn line_color_group(&mut self) -> Result<&mut LineColorGroupBuilder, TrackBuilderError> {
-        Ok(Self::require_feature(
-            &self.features,
+    pub fn line_color_group(&mut self) -> &mut LineColorGroupBuilder {
+        Self::require_feature(
+            &mut self.features,
             TrackFeature::LineColorTriggers,
             &mut self.line_color_group,
-        )?)
+            LineColorGroupBuilder::default(),
+        )
     }
 
-    pub fn camera_zoom_group(&mut self) -> Result<&mut CameraZoomGroupBuilder, TrackBuilderError> {
-        Ok(Self::require_feature(
-            &self.features,
+    pub fn camera_zoom_group(&mut self) -> &mut CameraZoomGroupBuilder {
+        Self::require_feature(
+            &mut self.features,
             TrackFeature::CameraZoomTriggers,
             &mut self.camera_zoom_group,
-        )?)
+            CameraZoomGroupBuilder::default(),
+        )
     }
 
-    pub fn legacy_camera_zoom_group(
-        &mut self,
-    ) -> Result<&mut LegacyCameraZoomGroupBuilder, TrackBuilderError> {
-        Ok(Self::require_feature(
-            &self.features,
+    pub fn legacy_camera_zoom_group(&mut self) -> &mut LegacyCameraZoomGroupBuilder {
+        Self::require_feature(
+            &mut self.features,
             TrackFeature::LegacyCameraZoomTriggers,
             &mut self.legacy_camera_zoom_group,
-        )?)
+            LegacyCameraZoomGroupBuilder::default(),
+        )
+    }
+
+    pub fn build(&mut self) -> Result<Track, GroupBuilderError<TrackSubBuilderError>> {
+        self.build_group()
     }
 }

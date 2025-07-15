@@ -22,22 +22,29 @@ define_group_builder! (
 );
 
 impl GroupBuilder for RiderGroupBuilder {
-    fn build(&mut self) -> Result<Self::Output, GroupBuilderError<Self::Feature, Self::SubError>> {
+    fn build_group(&mut self) -> Result<Self::Output, GroupBuilderError<Self::SubError>> {
         let mut riders: Vec<Rider> = vec![];
 
         for rider_builder in &self.riders {
             let rider = rider_builder.build().map_group_err()?;
-            self.check_feature(
+            Self::check_feature(
+                &mut self.features,
                 RiderFeature::StartVelocity,
                 &rider.start_velocity(),
                 "start_velocity",
             )?;
-            self.check_feature(
+            Self::check_feature(
+                &mut self.features,
                 RiderFeature::StartAngle,
                 &rider.start_angle(),
                 "start_angle",
             )?;
-            self.check_feature(RiderFeature::Remount, &rider.can_remount(), "can_remount")?;
+            Self::check_feature(
+                &mut self.features,
+                RiderFeature::Remount,
+                &rider.can_remount(),
+                "can_remount",
+            )?;
             riders.push(rider);
         }
 

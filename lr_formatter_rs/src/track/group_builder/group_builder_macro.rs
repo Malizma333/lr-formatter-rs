@@ -14,7 +14,7 @@ macro_rules! define_group_builder {
     ) => {
         paste::paste! {
             #[derive(Debug, derive_more::Display, PartialEq, Eq, Hash, Clone, Copy)]
-            pub enum $feature_ty {
+            pub(in crate::track) enum $feature_ty {
                 $($enum_variant),*
             }
 
@@ -39,20 +39,12 @@ macro_rules! define_group_builder {
                 )*
             }
 
-            pub type [<$name BuilderError>] = GroupBuilderError<$feature_ty, [<$name SubBuilderError>]>;
+            pub type [<$name BuilderError>] = GroupBuilderError<[<$name SubBuilderError>]>;
 
             impl GroupBuilderBase for [<$name Builder>] {
-                type Output = $name;
                 type Feature = $feature_ty;
+                type Output = $name;
                 type SubError = [<$name SubBuilderError>];
-
-                fn feature_set(&self) -> &std::collections::HashSet<Self::Feature> {
-                    &self.features
-                }
-
-                fn feature_set_mut(&mut self) -> &mut std::collections::HashSet<Self::Feature> {
-                    &mut self.features
-                }
             }
         }
     };

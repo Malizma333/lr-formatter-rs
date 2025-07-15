@@ -27,7 +27,7 @@ pub(in crate::formats::lrb) static SCNLINE: Lazy<ModHandler> = Lazy::new(|| ModH
             let y2 = cursor.read_f64::<LittleEndian>()?;
             let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
 
-            track_builder.line_group().add_scenery_line(id, endpoints)?;
+            track_builder.line_group().add_scenery_line(id, endpoints);
         }
 
         Ok(())

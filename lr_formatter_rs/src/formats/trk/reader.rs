@@ -16,9 +16,8 @@ use crate::{
         },
     },
     track::{
-        BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, GroupBuilder,
-        LineColorEvent, LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, TrackFeature,
-        Vec2, line::line_group::LineFeature,
+        BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
+        LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, Vec2,
     },
     util::{StringLength, bytes_to_hex_string, parse_string},
 };
@@ -59,16 +58,6 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
 
     for feature in feature_string.split(';').filter(|s| !s.is_empty()) {
         included_features.insert(feature);
-        if feature == FEATURE_RED_MULTIPLIER {
-            track_builder
-                .line_group()
-                .enable_feature(LineFeature::AccelerationMultiplier);
-        }
-        if feature == FEATURE_SCENERY_WIDTH {
-            track_builder
-                .line_group()
-                .enable_feature(LineFeature::SceneryWidth);
-        }
         // TODO: Attach warning if feature not accounted for
     }
 
@@ -174,9 +163,8 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                     let length = cursor.read_i16::<LittleEndian>()? as u32;
                     let zoom_event = CameraZoomEvent::new(target_zoom);
                     let line_hit = LineHitTrigger::new(line_id, length);
-                    track_builder.enable_feature(TrackFeature::LegacyCameraZoomTriggers);
                     track_builder
-                        .legacy_camera_zoom_group()?
+                        .legacy_camera_zoom_group()
                         .add_trigger()
                         .trigger(line_hit)
                         .event(zoom_event);
@@ -196,18 +184,18 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
             LineType::Standard => {
                 track_builder
                     .line_group()
-                    .add_standard_line(line_id, endpoints, line_inv, left_ext, right_ext)?;
+                    .add_standard_line(line_id, endpoints, line_inv, left_ext, right_ext);
             }
             LineType::Acceleration => {
                 track_builder
                     .line_group()
-                    .add_acceleration_line(line_id, endpoints, line_inv, left_ext, right_ext)?
+                    .add_acceleration_line(line_id, endpoints, line_inv, left_ext, right_ext)
                     .multiplier(line_multiplier);
             }
             LineType::Scenery => {
                 track_builder
                     .line_group()
-                    .add_scenery_line(line_id, endpoints)?
+                    .add_scenery_line(line_id, endpoints)
                     .width(line_scenery_width);
             }
         }
@@ -328,9 +316,8 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                             let end_frame = values[3].parse::<i32>()? as u32;
                             let zoom_event = CameraZoomEvent::new(target_zoom);
                             let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
-                            track_builder.enable_feature(TrackFeature::CameraZoomTriggers);
                             track_builder
-                                .camera_zoom_group()?
+                                .camera_zoom_group()
                                 .add_trigger()
                                 .trigger(frame_bounds)
                                 .event(zoom_event);
@@ -345,9 +332,8 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                             let bg_color_event =
                                 BackgroundColorEvent::new(RGBColor::new(red, green, blue));
                             let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
-                            track_builder.enable_feature(TrackFeature::BackgroundColorTriggers);
                             track_builder
-                                .background_color_group()?
+                                .background_color_group()
                                 .add_trigger()
                                 .trigger(frame_bounds)
                                 .event(bg_color_event);
@@ -362,9 +348,8 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                             let line_color_event =
                                 LineColorEvent::new(RGBColor::new(red, green, blue));
                             let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
-                            track_builder.enable_feature(TrackFeature::LineColorTriggers);
                             track_builder
-                                .line_color_group()?
+                                .line_color_group()
                                 .add_trigger()
                                 .trigger(frame_bounds)
                                 .event(line_color_event);

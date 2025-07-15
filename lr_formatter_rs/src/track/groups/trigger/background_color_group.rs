@@ -25,7 +25,7 @@ define_group_builder! (
 );
 
 impl GroupBuilder for BackgroundColorGroupBuilder {
-    fn build(&mut self) -> Result<Self::Output, GroupBuilderError<Self::Feature, Self::SubError>> {
+    fn build_group(&mut self) -> Result<Self::Output, GroupBuilderError<Self::SubError>> {
         let mut triggers: Vec<BackgroundColorTrigger> = vec![];
 
         for trigger_builder in &self.triggers {

@@ -19,7 +19,6 @@ define_group_builder!(
   enum LineFeature {
     SceneryWidth,
     AccelerationMultiplier,
-    SinglePrecisionSceneryWidth,
   }
 
   struct LineGroup {
@@ -30,7 +29,7 @@ define_group_builder!(
 );
 
 impl GroupBuilder for LineGroupBuilder {
-    fn build(&mut self) -> Result<Self::Output, GroupBuilderError<Self::Feature, Self::SubError>> {
+    fn build_group(&mut self) -> Result<Self::Output, GroupBuilderError<Self::SubError>> {
         let mut standard_lines: Vec<StandardLine> = vec![];
         let mut acceleration_lines: Vec<AccelerationLine> = vec![];
         let mut scenery_lines: Vec<SceneryLine> = vec![];
@@ -42,7 +41,8 @@ impl GroupBuilder for LineGroupBuilder {
 
         for acceleration_line_builder in &self.acceleration_lines {
             let acceleration_line = acceleration_line_builder.build().map_group_err()?;
-            self.check_feature(
+            Self::check_feature(
+                &mut self.features,
                 LineFeature::AccelerationMultiplier,
                 &acceleration_line.multiplier(),
                 "multiplier",
@@ -52,7 +52,12 @@ impl GroupBuilder for LineGroupBuilder {
 
         for scenery_line_builder in &self.scenery_lines {
             let scenery_line = scenery_line_builder.build().map_group_err()?;
-            self.check_feature(LineFeature::SceneryWidth, &scenery_line.width(), "width")?;
+            Self::check_feature(
+                &mut self.features,
+                LineFeature::SceneryWidth,
+                &scenery_line.width(),
+                "width",
+            )?;
             scenery_lines.push(scenery_line);
         }
 
@@ -73,7 +78,7 @@ impl LineGroupBuilder {
         flipped: bool,
         left_extension: bool,
         right_extension: bool,
-    ) -> Result<&mut StandardLineBuilder, LineGroupBuilderError> {
+    ) -> &mut StandardLineBuilder {
         self.standard_lines.push(
             StandardLineBuilder::default()
                 .id(id)
@@ -84,7 +89,7 @@ impl LineGroupBuilder {
                 .to_owned(),
         );
 
-        Ok(self.standard_lines.last_mut().unwrap())
+        self.standard_lines.last_mut().unwrap()
     }
 
     pub fn get_standard_lines(&mut self) -> impl Iterator<Item = &mut StandardLineBuilder> {
@@ -98,7 +103,7 @@ impl LineGroupBuilder {
         flipped: bool,
         left_extension: bool,
         right_extension: bool,
-    ) -> Result<&mut AccelerationLineBuilder, LineGroupBuilderError> {
+    ) -> &mut AccelerationLineBuilder {
         self.acceleration_lines.push(
             AccelerationLineBuilder::default()
                 .id(id)
@@ -109,7 +114,7 @@ impl LineGroupBuilder {
                 .to_owned(),
         );
 
-        Ok(self.acceleration_lines.last_mut().unwrap())
+        self.acceleration_lines.last_mut().unwrap()
     }
 
     pub fn get_acceleration_lines(&mut self) -> impl Iterator<Item = &mut AccelerationLineBuilder> {
@@ -120,7 +125,7 @@ impl LineGroupBuilder {
         &mut self,
         id: u32,
         endpoints: (Vec2, Vec2),
-    ) -> Result<&mut SceneryLineBuilder, LineGroupBuilderError> {
+    ) -> &mut SceneryLineBuilder {
         self.scenery_lines.push(
             SceneryLineBuilder::default()
                 .id(id)
@@ -128,7 +133,7 @@ impl LineGroupBuilder {
                 .to_owned(),
         );
 
-        Ok(self.scenery_lines.last_mut().unwrap())
+        self.scenery_lines.last_mut().unwrap()
     }
 
     pub fn get_scenery_lines(&mut self) -> impl Iterator<Item = &mut SceneryLineBuilder> {

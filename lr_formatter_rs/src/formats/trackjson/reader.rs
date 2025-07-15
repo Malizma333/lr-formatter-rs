@@ -3,11 +3,7 @@ use crate::{
         TrackReadError,
         trackjson::{FaultyU32, JsonTrack, LRAJsonArrayLine},
     },
-    track::{
-        GridVersion, GroupBuilder, LineType, RGBColor, Track, TrackBuilder, TrackFeature, Vec2,
-        layer::layer_group::LayerFeature, line::line_group::LineFeature,
-        rider::rider_group::RiderFeature,
-    },
+    track::{GridVersion, LineType, RGBColor, Track, TrackBuilder, Vec2},
 };
 
 pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
@@ -68,35 +64,27 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         flipped,
                         left_extension,
                         right_extension,
-                    )?;
+                    );
                 }
                 LineType::Acceleration => {
-                    if !line.multiplier.is_none() {
-                        track_builder
-                            .line_group()
-                            .enable_feature(LineFeature::AccelerationMultiplier);
+                    let line_builder = track_builder.line_group().add_acceleration_line(
+                        line.id,
+                        endpoints,
+                        flipped,
+                        left_extension,
+                        right_extension,
+                    );
+                    if let Some(multiplier) = line.multiplier {
+                        line_builder.multiplier(multiplier);
                     }
-                    track_builder
-                        .line_group()
-                        .add_acceleration_line(
-                            line.id,
-                            endpoints,
-                            flipped,
-                            left_extension,
-                            right_extension,
-                        )?
-                        .multiplier(line.multiplier.unwrap_or(1.0));
                 }
                 LineType::Scenery => {
-                    if !line.width.is_none() {
-                        track_builder
-                            .line_group()
-                            .enable_feature(LineFeature::SceneryWidth);
-                    }
-                    track_builder
+                    let line_builder = track_builder
                         .line_group()
-                        .add_scenery_line(line.id, endpoints)?
-                        .width(line.width.unwrap_or(1.0));
+                        .add_scenery_line(line.id, endpoints);
+                    if let Some(width) = line.width {
+                        line_builder.width(width);
+                    }
                 }
             }
         }
@@ -116,7 +104,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         flipped,
                         left_extension,
                         right_extension,
-                    )?;
+                    );
                 }
                 LRAJsonArrayLine::Acceleration(
                     id,
@@ -141,108 +129,77 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                             flipped,
                             left_extension,
                             right_extension,
-                        )?
+                        )
                         .multiplier(multiplier as f64);
                 }
                 LRAJsonArrayLine::Scenery(id, x1, y1, x2, y2) => {
                     let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
-                    track_builder.line_group().add_scenery_line(id, endpoints)?;
+                    track_builder.line_group().add_scenery_line(id, endpoints);
                 }
             }
         }
     }
 
     if let Some(layers) = json_track.layers {
-        track_builder.enable_feature(TrackFeature::Layers);
-        track_builder
-            .layer_group()?
-            .enable_feature(LayerFeature::Name)
-            .enable_feature(LayerFeature::Visible);
         for (index, layer) in layers.iter().enumerate() {
-            let mut layer_editable = true;
-            let mut layer_is_folder = false;
-            let mut layer_folder_id = None;
-            let mut layer_folder_size = 0;
+            let layer_is_folder = layer.size.is_some();
 
-            if let Some(editable) = layer.editable {
-                track_builder
-                    .layer_group()?
-                    .enable_feature(LayerFeature::Editable);
-                layer_editable = editable;
-            }
-
-            if let Some(folder_id) = &layer.folder_id {
-                track_builder
-                    .layer_group()?
-                    .enable_feature(LayerFeature::Folders);
-                if let FaultyU32::Valid(valid_folder_id) = folder_id {
-                    layer_folder_id = Some(*valid_folder_id);
-                }
-            }
-
-            if let Some(size) = layer.size {
-                track_builder
-                    .layer_group()?
-                    .enable_feature(LayerFeature::Folders);
-                layer_is_folder = true;
-                layer_folder_size = size;
-            }
-
-            if layer_is_folder {
-                track_builder
-                    .layer_group()?
+            if !layer_is_folder {
+                let layer_builder = track_builder
+                    .layer_group()
                     .add_layer(layer.id, index)?
                     .index(index)
                     .name(layer.name.to_string())
-                    .visible(layer.visible)
-                    .editable(layer_editable)
-                    .folder_id(layer_folder_id);
+                    .visible(layer.visible);
+
+                if let Some(editable) = layer.editable {
+                    layer_builder.editable(editable);
+                }
+
+                if let Some(folder_id) = &layer.folder_id {
+                    if let FaultyU32::Valid(valid_folder_id) = folder_id {
+                        layer_builder.folder_id(Some(*valid_folder_id));
+                    } else {
+                        layer_builder.folder_id(None);
+                    }
+                }
             } else {
-                track_builder
-                    .layer_group()?
+                let layer_folder_builder = track_builder
+                    .layer_group()
                     .add_layer_folder(layer.id, index)?
                     .index(index)
                     .name(layer.name.to_string())
-                    .visible(layer.visible)
-                    .editable(layer_editable)
-                    .size(layer_folder_size);
+                    .visible(layer.visible);
+
+                if let Some(editable) = layer.editable {
+                    layer_folder_builder.editable(editable);
+                }
+
+                if let Some(size) = layer.size {
+                    layer_folder_builder.size(size);
+                }
             }
         }
     }
 
     if let Some(riders) = json_track.riders {
-        track_builder.enable_feature(TrackFeature::RiderProperties);
-        track_builder
-            .rider_group()?
-            .enable_feature(RiderFeature::Remount)
-            .enable_feature(RiderFeature::StartAngle);
         for rider in riders.iter() {
             let start_position = Vec2::new(rider.start_pos.x, rider.start_pos.y);
             let start_velocity = Vec2::new(rider.start_vel.x, rider.start_vel.y);
-            let mut start_angle = 0.0;
-            let mut can_remount = false;
+
+            let rider_builder = track_builder
+                .rider_group()
+                .add_rider()
+                .start_position(start_position)
+                .start_velocity(start_velocity);
 
             if let Some(angle) = rider.angle {
-                track_builder
-                    .rider_group()?
-                    .enable_feature(RiderFeature::StartAngle);
-                start_angle = angle;
+                rider_builder.start_angle(angle);
             }
 
             if let Some(remount) = rider.remountable {
-                track_builder
-                    .rider_group()?
-                    .enable_feature(RiderFeature::Remount);
-                can_remount = remount;
+                rider_builder.can_remount(remount);
             }
-
-            track_builder
-                .rider_group()?
-                .add_rider()
-                .start_position(start_position)
-                .start_velocity(start_velocity)
-                .start_angle(start_angle)
-                .can_remount(can_remount);
         }
     }
 

@@ -3,7 +3,7 @@ use std::io::{Cursor, Read};
 
 use crate::{
     formats::{TrackReadError, sol::amf0::deserialize},
-    track::{GridVersion, GroupBuilder, LineType, Track, TrackBuilder, Vec2},
+    track::{GridVersion, LineType, Track, TrackBuilder, Vec2},
     util::{StringLength, bytes_to_hex_string, parse_string},
 };
 
@@ -346,7 +346,7 @@ pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, TrackReadE
                         flipped,
                         left_extension,
                         right_extension,
-                    )?;
+                    );
                 }
                 LineType::Acceleration => {
                     track_builder.line_group().add_acceleration_line(
@@ -355,10 +355,10 @@ pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, TrackReadE
                         flipped,
                         left_extension,
                         right_extension,
-                    )?;
+                    );
                 }
                 LineType::Scenery => {
-                    track_builder.line_group().add_scenery_line(id, endpoints)?;
+                    track_builder.line_group().add_scenery_line(id, endpoints);
                 }
             }
         }

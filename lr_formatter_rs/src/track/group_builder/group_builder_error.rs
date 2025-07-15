@@ -7,14 +7,10 @@ impl<T> SubBuilderError for T where T: Debug + Error + Send + Sync + 'static {}
 
 /// A generalized builder error type for group builders
 #[derive(Debug)]
-pub enum GroupBuilderError<Feature, SubError>
+pub enum GroupBuilderError<SubError>
 where
-    Feature: Debug,
     SubError: SubBuilderError,
 {
-    /// Feature flag was required (because attribute is set) but missing
-    MissingFeatureFlag(Feature),
-
     /// Attribute was required (because feature is enabled) but missing
     MissingAttribute(&'static str),
 
@@ -22,16 +18,12 @@ where
     SubBuilderError(SubError),
 }
 
-impl<Feature, SubError> Display for GroupBuilderError<Feature, SubError>
+impl<SubError> Display for GroupBuilderError<SubError>
 where
-    Feature: Debug,
     SubError: SubBuilderError,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GroupBuilderError::MissingFeatureFlag(flag) => {
-                write!(f, "Expected feature to be registered: {:?}", flag)
-            }
             GroupBuilderError::MissingAttribute(attr) => {
                 write!(f, "Expected attribute to be set: {}", attr)
             }
@@ -40,9 +32,8 @@ where
     }
 }
 
-impl<Feature, SubError> Error for GroupBuilderError<Feature, SubError>
+impl<SubError> Error for GroupBuilderError<SubError>
 where
-    Feature: Debug,
     SubError: SubBuilderError,
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
@@ -53,9 +44,8 @@ where
     }
 }
 
-impl<Feature, SubError> From<SubError> for GroupBuilderError<Feature, SubError>
+impl<SubError> From<SubError> for GroupBuilderError<SubError>
 where
-    Feature: Debug,
     SubError: SubBuilderError,
 {
     fn from(err: SubError) -> Self {
@@ -64,22 +54,19 @@ where
 }
 
 /// Trait to help map nested builder errors into group-level builder errors
-pub trait IntoGroupResult<T, SubError, Feature>
+pub trait IntoGroupResult<T, SubError>
 where
-    Feature: Debug,
-    SubError: SubBuilderError + Into<GroupBuilderError<Feature, SubError>>,
+    SubError: SubBuilderError + Into<GroupBuilderError<SubError>>,
 {
-    fn map_group_err(self) -> Result<T, GroupBuilderError<Feature, SubError>>;
+    fn map_group_err(self) -> Result<T, GroupBuilderError<SubError>>;
 }
 
-impl<T, GroupError, SubError, Feature> IntoGroupResult<T, SubError, Feature>
-    for Result<T, GroupError>
+impl<T, GroupError, SubError> IntoGroupResult<T, SubError> for Result<T, GroupError>
 where
-    Feature: Debug,
     GroupError: Error + Debug + 'static + Into<SubError>,
-    SubError: SubBuilderError + Into<GroupBuilderError<Feature, SubError>>,
+    SubError: SubBuilderError + Into<GroupBuilderError<SubError>>,
 {
-    fn map_group_err(self) -> Result<T, GroupBuilderError<Feature, SubError>> {
+    fn map_group_err(self) -> Result<T, GroupBuilderError<SubError>> {
         self.map_err(|e| e.into().into())
     }
 }

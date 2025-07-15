@@ -24,7 +24,7 @@ define_group_builder! (
 );
 
 impl GroupBuilder for LineColorGroupBuilder {
-    fn build(&mut self) -> Result<Self::Output, GroupBuilderError<Self::Feature, Self::SubError>> {
+    fn build_group(&mut self) -> Result<Self::Output, GroupBuilderError<Self::SubError>> {
         let mut triggers: Vec<LineColorTrigger> = vec![];
 
         for trigger_builder in &self.triggers {

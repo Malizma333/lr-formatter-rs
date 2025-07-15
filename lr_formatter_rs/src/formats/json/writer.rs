@@ -69,7 +69,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
     }
 
     if let Some(layer_group) = track.layer_group() {
-        // TODO: Add layers in correct order
+        let mut tupled_layers = vec![];
         for layer in layer_group.layers() {
             let json_folder_id = if let Some(valid_id) = layer.folder_id().unwrap_or(None) {
                 Some(FaultyU32::Valid(valid_id))
@@ -77,28 +77,40 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
                 Some(FaultyU32::Invalid(-1))
             };
 
-            layers.push(JsonLayer {
-                id: layer.id(),
-                layer_type: Some(LAYER_TYPE_LAYER),
-                name: layer.name().unwrap_or("".to_string()),
-                visible: layer.visible().unwrap_or(true),
-                editable: layer.editable(),
-                folder_id: json_folder_id,
-                size: None,
-            });
+            tupled_layers.push((
+                layer.index(),
+                JsonLayer {
+                    id: layer.id(),
+                    layer_type: Some(LAYER_TYPE_LAYER),
+                    name: layer.name().unwrap_or("".to_string()),
+                    visible: layer.visible().unwrap_or(true),
+                    editable: layer.editable(),
+                    folder_id: json_folder_id,
+                    size: None,
+                },
+            ));
         }
         if let Some(layer_folders) = layer_group.layer_folders() {
             for layer_folder in layer_folders {
-                layers.push(JsonLayer {
-                    id: layer_folder.id(),
-                    layer_type: Some(LAYER_TYPE_FOLDER),
-                    name: layer_folder.name().unwrap_or("".to_string()),
-                    visible: layer_folder.visible().unwrap_or(true),
-                    editable: layer_folder.editable(),
-                    folder_id: None,
-                    size: layer_folder.size(),
-                });
+                tupled_layers.push((
+                    layer_folder.index(),
+                    JsonLayer {
+                        id: layer_folder.id(),
+                        layer_type: Some(LAYER_TYPE_FOLDER),
+                        name: layer_folder.name().unwrap_or("".to_string()),
+                        visible: layer_folder.visible().unwrap_or(true),
+                        editable: layer_folder.editable(),
+                        folder_id: None,
+                        size: layer_folder.size(),
+                    },
+                ));
             }
+        }
+
+        tupled_layers.sort_by_key(|layer| layer.0);
+
+        for layer in tupled_layers {
+            layers.push(layer.1);
         }
     }
 

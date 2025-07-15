@@ -34,7 +34,6 @@ pub enum SolReadError {
     RiderGroup(#[from] RiderGroupBuilderError),
     #[error("{0}")]
     LayerGroup(#[from] LayerGroupBuilderError),
-    // TODO maybe remove this
     #[error("Invalid value for `{name}`: {value}")]
     InvalidData { name: String, value: String },
     #[error("{0}")]

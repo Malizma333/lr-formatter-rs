@@ -16,7 +16,7 @@ pub enum ParseLengthPrefixedStringError {
     },
 }
 
-pub(crate) enum StringLength {
+pub enum StringLength {
     U8,
     U16,
     Fixed(usize),

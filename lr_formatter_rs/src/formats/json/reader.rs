@@ -4,6 +4,7 @@ use crate::{
         BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
         LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, Vec2,
     },
+    util::scale_factor::from_lra_zoom,
 };
 
 pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
@@ -251,7 +252,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
     track_builder.metadata().start_gravity(start_gravity);
 
     if let Some(start_zoom) = json_track.start_zoom {
-        track_builder.metadata().start_zoom(f64::from(start_zoom));
+        track_builder
+            .metadata()
+            .start_zoom(from_lra_zoom(start_zoom));
     }
 
     let init_line_red = if let Some(init_red) = json_track.line_color_red {
@@ -304,7 +307,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
         for trigger in line_triggers {
             if trigger.zoom {
                 let line_hit = LineHitTrigger::new(trigger.id, trigger.frames);
-                let zoom_event = CameraZoomEvent::new(f64::from(trigger.target));
+                let zoom_event = CameraZoomEvent::new(from_lra_zoom(trigger.target));
                 track_builder
                     .legacy_camera_zoom_group()
                     .add_trigger()
@@ -319,7 +322,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
             match trigger.trigger_type {
                 0 => {
                     // Zoom
-                    let target_zoom = f64::from(trigger.zoom_target); // TODO: Scale correctly
+                    let target_zoom = from_lra_zoom(trigger.zoom_target);
                     let start_frame = trigger.start;
                     let end_frame = trigger.end;
                     let zoom_event = CameraZoomEvent::new(target_zoom);

@@ -16,7 +16,10 @@ use crate::{
         BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
         LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, Vec2,
     },
-    util::{StringLength, bytes_to_hex_string, parse_string},
+    util::{
+        StringLength, bytes_to_hex_string, parse_string,
+        scale_factor::{from_lra_scenery_width, from_lra_zoom},
+    },
 };
 
 use super::{
@@ -142,7 +145,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
 
         if line_type == LineType::Scenery {
             if included_features.contains(FEATURE_SCENERY_WIDTH) {
-                line_scenery_width = f64::from(cursor.read_u8()?) / 10.0;
+                line_scenery_width = from_lra_scenery_width(cursor.read_u8()?);
             }
         } else {
             line_id = cursor.read_u32::<LittleEndian>()?;
@@ -156,7 +159,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
             if included_features.contains(FEATURE_IGNORABLE_TRIGGER) {
                 let has_zoom_trigger = cursor.read_u8()?;
                 if has_zoom_trigger == 1 {
-                    let target_zoom = f64::from(cursor.read_f32::<LittleEndian>()?);
+                    let target_zoom = from_lra_zoom(cursor.read_f32::<LittleEndian>()?);
                     let length = u32::try_from(cursor.read_i16::<LittleEndian>()?)?;
                     let zoom_event = CameraZoomEvent::new(target_zoom);
                     let line_hit = LineHitTrigger::new(line_id, length);
@@ -238,7 +241,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
 
     let num_entries = cursor.read_u16::<LittleEndian>()?;
 
-    let mut start_zoom = 4.0;
+    let mut start_zoom = from_lra_zoom(4.0);
     let mut start_gravity_x = 0.0;
     let mut start_gravity_y = 1.0;
     let mut gravity_well_size = 10.0;
@@ -265,7 +268,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
 
         match key {
             FEATURE_START_ZOOM => {
-                start_zoom = f64::from(value.parse::<f32>()?);
+                start_zoom = from_lra_zoom(value.parse::<f32>()?);
             }
             FEATURE_X_GRAVITY => {
                 start_gravity_x = f64::from(value.parse::<f32>()?);
@@ -308,7 +311,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
                     match values[0] {
                         "0" => {
                             // Zoom
-                            let target_zoom = f64::from(values[1].parse::<f32>()?);
+                            let target_zoom = from_lra_zoom(values[1].parse::<f32>()?);
                             let start_frame = u32::try_from(values[2].parse::<i32>()?)?;
                             let end_frame = u32::try_from(values[3].parse::<i32>()?)?;
                             let zoom_event = CameraZoomEvent::new(target_zoom);

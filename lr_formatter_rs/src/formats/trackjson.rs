@@ -43,7 +43,7 @@ struct LRAJsonTrigger {
     start: u32,
     end: u32,
     #[serde(rename = "zoomTarget")]
-    zoom_target: FaultyU32,
+    zoom_target: f32,
     #[serde(rename = "backgroundRed")]
     background_red: Option<FaultyU32>,
     #[serde(rename = "backgroundGreen")]

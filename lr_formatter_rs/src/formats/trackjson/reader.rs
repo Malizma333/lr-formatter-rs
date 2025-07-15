@@ -3,7 +3,10 @@ use crate::{
         TrackReadError,
         trackjson::{FaultyU32, JsonTrack, LRAJsonArrayLine},
     },
-    track::{GridVersion, LineType, RGBColor, Track, TrackBuilder, Vec2},
+    track::{
+        BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
+        LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, Vec2,
+    },
 };
 
 pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
@@ -303,7 +306,171 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         .metadata()
         .start_background_color(RGBColor::new(init_bg_red, init_bg_green, init_bg_blue));
 
-    // TODO: These fields need parsing into the internal format still
-    // line_based_triggers, time_based_triggers
+    if let Some(line_triggers) = json_track.line_based_triggers {
+        for trigger in line_triggers {
+            if trigger.zoom {
+                let line_hit = LineHitTrigger::new(trigger.id, trigger.frames);
+                let zoom_event = CameraZoomEvent::new(trigger.target as f64);
+                track_builder
+                    .legacy_camera_zoom_group()
+                    .add_trigger()
+                    .trigger(line_hit)
+                    .event(zoom_event);
+            }
+        }
+    }
+
+    if let Some(time_triggers) = json_track.time_based_triggers {
+        for (i, trigger) in time_triggers.iter().enumerate() {
+            match trigger.trigger_type {
+                0 => {
+                    // Zoom
+                    let target_zoom = trigger.zoom_target as f64; // TODO: Scale correctly
+                    let start_frame = trigger.start;
+                    let end_frame = trigger.end;
+                    let zoom_event = CameraZoomEvent::new(target_zoom);
+                    let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
+                    track_builder
+                        .camera_zoom_group()
+                        .add_trigger()
+                        .trigger(frame_bounds)
+                        .event(zoom_event);
+                }
+                1 => {
+                    // Background Color
+                    let red = match &trigger.background_red {
+                        Some(bg_red_value) => match bg_red_value {
+                            FaultyU32::Valid(red) => *red as u8, // TODO: Replace unsafe as cast with error
+                            FaultyU32::Invalid(red) => {
+                                return Err(TrackReadError::InvalidData {
+                                    name: "background red".to_string(),
+                                    value: red.to_string(),
+                                });
+                            }
+                        },
+                        None => {
+                            return Err(TrackReadError::InvalidData {
+                                name: "background red".to_string(),
+                                value: "None".to_string(),
+                            });
+                        }
+                    };
+                    let green = match &trigger.background_green {
+                        Some(bg_green_value) => match bg_green_value {
+                            FaultyU32::Valid(green) => *green as u8,
+                            FaultyU32::Invalid(green) => {
+                                return Err(TrackReadError::InvalidData {
+                                    name: "background green".to_string(),
+                                    value: green.to_string(),
+                                });
+                            }
+                        },
+                        None => {
+                            return Err(TrackReadError::InvalidData {
+                                name: "background green".to_string(),
+                                value: "None".to_string(),
+                            });
+                        }
+                    };
+                    let blue = match &trigger.background_blue {
+                        Some(bg_blue_value) => match bg_blue_value {
+                            FaultyU32::Valid(blue) => *blue as u8,
+                            FaultyU32::Invalid(blue) => {
+                                return Err(TrackReadError::InvalidData {
+                                    name: "background blue".to_string(),
+                                    value: blue.to_string(),
+                                });
+                            }
+                        },
+                        None => {
+                            return Err(TrackReadError::InvalidData {
+                                name: "background blue".to_string(),
+                                value: "None".to_string(),
+                            });
+                        }
+                    };
+                    let start_frame = trigger.start;
+                    let end_frame = trigger.end;
+                    let bg_color_event = BackgroundColorEvent::new(RGBColor::new(red, green, blue));
+                    let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
+                    track_builder
+                        .background_color_group()
+                        .add_trigger()
+                        .trigger(frame_bounds)
+                        .event(bg_color_event);
+                }
+                2 => {
+                    // Line Color
+                    let red = match &trigger.line_red {
+                        Some(line_red_value) => match line_red_value {
+                            FaultyU32::Valid(red) => *red as u8, // TODO: Replace unsafe as cast with error
+                            FaultyU32::Invalid(red) => {
+                                return Err(TrackReadError::InvalidData {
+                                    name: "line red".to_string(),
+                                    value: red.to_string(),
+                                });
+                            }
+                        },
+                        None => {
+                            return Err(TrackReadError::InvalidData {
+                                name: "line red".to_string(),
+                                value: "None".to_string(),
+                            });
+                        }
+                    };
+                    let green = match &trigger.line_green {
+                        Some(line_green_value) => match line_green_value {
+                            FaultyU32::Valid(green) => *green as u8,
+                            FaultyU32::Invalid(green) => {
+                                return Err(TrackReadError::InvalidData {
+                                    name: "line green".to_string(),
+                                    value: green.to_string(),
+                                });
+                            }
+                        },
+                        None => {
+                            return Err(TrackReadError::InvalidData {
+                                name: "line green".to_string(),
+                                value: "None".to_string(),
+                            });
+                        }
+                    };
+                    let blue = match &trigger.line_blue {
+                        Some(line_blue_value) => match line_blue_value {
+                            FaultyU32::Valid(blue) => *blue as u8,
+                            FaultyU32::Invalid(blue) => {
+                                return Err(TrackReadError::InvalidData {
+                                    name: "line blue".to_string(),
+                                    value: blue.to_string(),
+                                });
+                            }
+                        },
+                        None => {
+                            return Err(TrackReadError::InvalidData {
+                                name: "line blue".to_string(),
+                                value: "None".to_string(),
+                            });
+                        }
+                    };
+                    let start_frame = trigger.start;
+                    let end_frame = trigger.end;
+                    let line_color_event = LineColorEvent::new(RGBColor::new(red, green, blue));
+                    let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
+                    track_builder
+                        .line_color_group()
+                        .add_trigger()
+                        .trigger(frame_bounds)
+                        .event(line_color_event);
+                }
+                other => {
+                    return Err(TrackReadError::InvalidData {
+                        name: format!("triggers {} type", i),
+                        value: other.to_string(),
+                    });
+                }
+            }
+        }
+    }
+
     Ok(track_builder.build()?)
 }

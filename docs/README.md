@@ -14,7 +14,7 @@ Created with the intent to update the TRK format, inspired by the modularity of 
 
 ### JSON (.track.json)
 
-Created for linerider.com, with a modified version created in LRA for compatibility purposes. However, while the linerider.com writer received updates to the file structure, the LRA implementation did not catch up to these updates and added support for LRA-native features, diverting the initial format into almost two separate JSON formats. Documentation for the overall format can be found [here](https://github.com/lrbspec/lr-formatter-rs/blob/main/docs/trackjson.md).
+Created for linerider.com, with a modified version created in LRA for compatibility purposes. However, while the linerider.com writer received updates to the file structure, the LRA implementation did not catch up to these updates and added support for LRA-native features, diverting the initial format into almost two separate JSON formats. Documentation for the overall format can be found [here](https://github.com/lrbspec/lr-formatter-rs/blob/main/docs/json.md).
 
 ## Other Formats (Unsupported)
 

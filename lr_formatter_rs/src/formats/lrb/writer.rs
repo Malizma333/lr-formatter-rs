@@ -1,12 +1,12 @@
 use super::{SUPPORTED_MODS, mod_flags};
-use crate::{formats::TrackWriteError, track::Track};
+use crate::{formats::lrb::LrbWriteError, track::Track};
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::{
     collections::HashMap,
     io::{Cursor, Seek, SeekFrom, Write},
 };
 
-pub fn write(internal: &Track) -> Result<Vec<u8>, TrackWriteError> {
+pub fn write(internal: &Track) -> Result<Vec<u8>, LrbWriteError> {
     let mut cursor = Cursor::new(Vec::new());
     let mut mod_table_entry_offsets: HashMap<String, u64> = HashMap::new();
 

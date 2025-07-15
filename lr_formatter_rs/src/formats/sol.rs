@@ -1,10 +1,12 @@
 //! Format used by original flash editions of Line Rider, which includes multiple tracks within the same file
 
 mod amf0;
+mod error;
 mod reader;
 mod writer;
 
 pub use amf0::{Amf0DeserializationError, Amf0SerializationError};
+pub use error::{SolReadError, SolWriteError};
 pub use reader::read;
 pub use writer::write;
 

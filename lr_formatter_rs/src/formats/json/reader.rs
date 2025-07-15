@@ -1,28 +1,22 @@
 use crate::{
-    formats::{
-        TrackReadError,
-        trackjson::{FaultyU32, JsonTrack, LRAJsonArrayLine},
-    },
+    formats::json::{FaultyU32, JsonReadError, JsonTrack, LRAJsonArrayLine},
     track::{
         BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
         LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, Vec2,
     },
 };
 
-pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
+pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
     let track_builder = &mut TrackBuilder::default();
     let json_string = String::from_utf8(data.to_vec())?;
-    let json_track: JsonTrack =
-        serde_json::from_str(&json_string).map_err(|err| TrackReadError::Other {
-            message: format!("Failed to deserialize json track: {}", err),
-        })?;
+    let json_track: JsonTrack = serde_json::from_str(&json_string)?;
 
     let grid_version = match json_track.version.as_str() {
         "6.0" => GridVersion::V6_0,
         "6.1" => GridVersion::V6_1,
         "6.2" => GridVersion::V6_2,
         other => {
-            return Err(TrackReadError::InvalidData {
+            return Err(JsonReadError::InvalidData {
                 name: "grid version".to_string(),
                 value: other.to_string(),
             });
@@ -38,7 +32,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                 1 => LineType::Acceleration,
                 2 => LineType::Scenery,
                 other => {
-                    return Err(TrackReadError::InvalidData {
+                    return Err(JsonReadError::InvalidData {
                         name: "line type".to_string(),
                         value: other.to_string(),
                     });
@@ -342,14 +336,14 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         Some(bg_red_value) => match bg_red_value {
                             FaultyU32::Valid(red) => *red as u8, // TODO: Replace unsafe as cast with error
                             FaultyU32::Invalid(red) => {
-                                return Err(TrackReadError::InvalidData {
+                                return Err(JsonReadError::InvalidData {
                                     name: "background red".to_string(),
                                     value: red.to_string(),
                                 });
                             }
                         },
                         None => {
-                            return Err(TrackReadError::InvalidData {
+                            return Err(JsonReadError::InvalidData {
                                 name: "background red".to_string(),
                                 value: "None".to_string(),
                             });
@@ -359,14 +353,14 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         Some(bg_green_value) => match bg_green_value {
                             FaultyU32::Valid(green) => *green as u8,
                             FaultyU32::Invalid(green) => {
-                                return Err(TrackReadError::InvalidData {
+                                return Err(JsonReadError::InvalidData {
                                     name: "background green".to_string(),
                                     value: green.to_string(),
                                 });
                             }
                         },
                         None => {
-                            return Err(TrackReadError::InvalidData {
+                            return Err(JsonReadError::InvalidData {
                                 name: "background green".to_string(),
                                 value: "None".to_string(),
                             });
@@ -376,14 +370,14 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         Some(bg_blue_value) => match bg_blue_value {
                             FaultyU32::Valid(blue) => *blue as u8,
                             FaultyU32::Invalid(blue) => {
-                                return Err(TrackReadError::InvalidData {
+                                return Err(JsonReadError::InvalidData {
                                     name: "background blue".to_string(),
                                     value: blue.to_string(),
                                 });
                             }
                         },
                         None => {
-                            return Err(TrackReadError::InvalidData {
+                            return Err(JsonReadError::InvalidData {
                                 name: "background blue".to_string(),
                                 value: "None".to_string(),
                             });
@@ -405,14 +399,14 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         Some(line_red_value) => match line_red_value {
                             FaultyU32::Valid(red) => *red as u8, // TODO: Replace unsafe as cast with error
                             FaultyU32::Invalid(red) => {
-                                return Err(TrackReadError::InvalidData {
+                                return Err(JsonReadError::InvalidData {
                                     name: "line red".to_string(),
                                     value: red.to_string(),
                                 });
                             }
                         },
                         None => {
-                            return Err(TrackReadError::InvalidData {
+                            return Err(JsonReadError::InvalidData {
                                 name: "line red".to_string(),
                                 value: "None".to_string(),
                             });
@@ -422,14 +416,14 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         Some(line_green_value) => match line_green_value {
                             FaultyU32::Valid(green) => *green as u8,
                             FaultyU32::Invalid(green) => {
-                                return Err(TrackReadError::InvalidData {
+                                return Err(JsonReadError::InvalidData {
                                     name: "line green".to_string(),
                                     value: green.to_string(),
                                 });
                             }
                         },
                         None => {
-                            return Err(TrackReadError::InvalidData {
+                            return Err(JsonReadError::InvalidData {
                                 name: "line green".to_string(),
                                 value: "None".to_string(),
                             });
@@ -439,14 +433,14 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         Some(line_blue_value) => match line_blue_value {
                             FaultyU32::Valid(blue) => *blue as u8,
                             FaultyU32::Invalid(blue) => {
-                                return Err(TrackReadError::InvalidData {
+                                return Err(JsonReadError::InvalidData {
                                     name: "line blue".to_string(),
                                     value: blue.to_string(),
                                 });
                             }
                         },
                         None => {
-                            return Err(TrackReadError::InvalidData {
+                            return Err(JsonReadError::InvalidData {
                                 name: "line blue".to_string(),
                                 value: "None".to_string(),
                             });
@@ -463,7 +457,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                         .event(line_color_event);
                 }
                 other => {
-                    return Err(TrackReadError::InvalidData {
+                    return Err(JsonReadError::InvalidData {
                         name: format!("triggers {} type", i),
                         value: other.to_string(),
                     });

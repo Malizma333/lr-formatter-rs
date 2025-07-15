@@ -1,15 +1,12 @@
 use crate::{
-    formats::{
-        TrackWriteError,
-        trackjson::{
-            FaultyU32, JsonLayer, JsonLine, JsonRider, JsonTrack, LAYER_TYPE_FOLDER,
-            LAYER_TYPE_LAYER, V2,
-        },
+    formats::json::{
+        FaultyU32, JsonLayer, JsonLine, JsonReadError, JsonRider, JsonTrack, LAYER_TYPE_FOLDER,
+        LAYER_TYPE_LAYER, V2,
     },
     track::{GridVersion, Track},
 };
 
-pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
+pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
     let version = match track.metadata().grid_version() {
         GridVersion::V6_0 => String::from("6.0"),
         GridVersion::V6_1 => String::from("6.1"),
@@ -186,9 +183,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
         y_gravity: None,
     };
 
-    let track_string = serde_json::to_string(&track).map_err(|err| TrackWriteError::Other {
-        message: format!("Failed to serialize json track: {}", err),
-    })?;
+    let track_string = serde_json::to_string(&track)?;
 
     Ok(track_string.into_bytes())
 }

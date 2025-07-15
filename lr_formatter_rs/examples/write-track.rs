@@ -1,5 +1,5 @@
 use lr_formatter_rs::{
-    formats::trackjson,
+    formats::json,
     track::{GridVersion, TrackBuilder},
 };
 use std::{fs::File, io::Write};
@@ -13,7 +13,7 @@ fn main() {
     let track = track_builder.build().unwrap();
 
     // Write the track
-    let output_data = trackjson::write(&track).unwrap();
+    let output_data = json::write(&track).unwrap();
     File::create("new_track.track.json")
         .unwrap()
         .write_all(&output_data)

@@ -2,27 +2,25 @@
 
 mod base;
 mod common;
+mod error;
 mod mod_flags;
 mod reader;
 mod writer;
 
+pub use error::{LrbReadError, LrbWriteError};
 pub use reader::read;
 pub use writer::write;
 
-use crate::{
-    formats::{TrackReadError, TrackWriteError},
-    track::{Track, TrackBuilder},
-};
+use crate::track::{Track, TrackBuilder};
 use base::{GRIDVER, LABEL, SCNLINE, SIMLINE, STARTOFFSET};
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, io::Cursor};
 
-type ReadLambda = Box<
-    dyn Fn(&mut Cursor<Vec<u8>>, &mut TrackBuilder) -> Result<(), TrackReadError> + Send + Sync,
->;
+type ReadLambda =
+    Box<dyn Fn(&mut Cursor<Vec<u8>>, &mut TrackBuilder) -> Result<(), LrbReadError> + Send + Sync>;
 
 type WriteLambda =
-    Box<dyn Fn(&mut Cursor<Vec<u8>>, &Track) -> Result<(), TrackWriteError> + Send + Sync>;
+    Box<dyn Fn(&mut Cursor<Vec<u8>>, &Track) -> Result<(), LrbWriteError> + Send + Sync>;
 
 struct ModHandler {
     flags: u8,

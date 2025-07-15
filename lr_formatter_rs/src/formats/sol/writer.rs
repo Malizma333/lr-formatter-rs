@@ -5,14 +5,14 @@ use std::{
 };
 
 use crate::{
-    formats::{
-        TrackWriteError,
-        sol::amf0::{Amf0Value, serialize},
+    formats::sol::{
+        SolWriteError,
+        amf0::{Amf0Value, serialize},
     },
     track::{GridVersion, Track, Vec2},
 };
 
-pub fn write(track: &Track) -> Result<Vec<u8>, TrackWriteError> {
+pub fn write(track: &Track) -> Result<Vec<u8>, SolWriteError> {
     let mut cursor = Cursor::new(Vec::new());
 
     cursor.write_all(b"\x00\xBF")?;

@@ -1,13 +1,13 @@
 use super::{SUPPORTED_MODS, mod_flags};
 use crate::{
-    formats::TrackReadError,
+    formats::lrb::LrbReadError,
     track::{Track, TrackBuilder},
     util::{self, StringLength, parse_string},
 };
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
-pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
+pub fn read(data: Vec<u8>) -> Result<Track, LrbReadError> {
     let track_builder = &mut TrackBuilder::default();
     let mut cursor = Cursor::new(data);
 
@@ -16,7 +16,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     cursor.read_exact(&mut magic_number)?;
 
     if &magic_number != b"LRB" {
-        return Err(TrackReadError::InvalidData {
+        return Err(LrbReadError::InvalidData {
             name: "magic_number".to_string(),
             value: util::bytes_to_hex_string(&magic_number),
         });
@@ -63,9 +63,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
             }
         } else if flags & mod_flags::REQUIRED != 0 {
             // Return an error if we don't support the mod but it's required
-            return Err(TrackReadError::Other {
-                message: format!("Required mod not supported: {} v{}", name, version),
-            });
+            return Err(LrbReadError::UnsupportedRequiredMod { name, version });
         } else {
             // TODO: Warn about unsupported mod not being included
 

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, bail};
 use clap::Parser;
 use dialoguer::Input;
-use lr_formatter_rs::formats::{lrb, sol, trackjson, trk};
+use lr_formatter_rs::formats::{json, lrb, sol, trk};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -22,7 +22,7 @@ struct Cli {
 }
 
 enum Format {
-    TrackJson,
+    Json,
     LRB,
     TRK,
     SOL(Option<u32>),
@@ -30,25 +30,25 @@ enum Format {
 
 fn convert(input: Vec<u8>, from: Format, to: Format) -> Result<Vec<u8>> {
     let internal_format = match from {
-        Format::TrackJson => trackjson::read(input)?,
+        Format::Json => json::read(input)?,
         Format::LRB => lrb::read(input)?,
         Format::TRK => trk::read(input)?,
         Format::SOL(track_index) => sol::read(input, track_index)?,
     };
 
     let output_bytes = match to {
-        Format::TrackJson => trackjson::write(&internal_format),
-        Format::LRB => lrb::write(&internal_format),
-        Format::SOL(_) => sol::write(&internal_format),
-        _ => bail!("Unsupported to format. Must be one of: trackjson, lrb, sol"),
-    }?;
+        Format::Json => json::write(&internal_format)?,
+        Format::LRB => lrb::write(&internal_format)?,
+        Format::SOL(_) => sol::write(&internal_format)?,
+        _ => bail!("Unsupported to format. Must be one of: json, lrb, sol"),
+    };
 
     Ok(output_bytes)
 }
 
 fn parse_format(format: &str, sol_index: Option<u32>) -> Result<Format> {
     match format.to_lowercase().as_str() {
-        "json" => Ok(Format::TrackJson),
+        "json" => Ok(Format::Json),
         "lrb" => Ok(Format::LRB),
         "trk" => Ok(Format::TRK),
         "sol" => Ok(Format::SOL(sol_index)),
@@ -114,7 +114,7 @@ fn run() -> Result<()> {
         Format::LRB => ".lrb",
         Format::SOL(_) => ".sol",
         Format::TRK => ".trk",
-        Format::TrackJson => ".track.json",
+        Format::Json => ".track.json",
     };
     let output_file_name = &args
         .output_file

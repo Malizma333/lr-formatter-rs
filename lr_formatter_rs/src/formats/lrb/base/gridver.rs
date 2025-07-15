@@ -1,8 +1,5 @@
 use crate::{
-    formats::{
-        TrackReadError,
-        lrb::{ModHandler, mod_flags},
-    },
+    formats::lrb::{LrbReadError, ModHandler, mod_flags},
     track::GridVersion,
 };
 use byteorder::{ReadBytesExt, WriteBytesExt};
@@ -19,7 +16,7 @@ pub(in crate::formats::lrb) static GRIDVER: Lazy<ModHandler> = Lazy::new(|| ModH
             1 => GridVersion::V6_1,
             2 => GridVersion::V6_0,
             other => {
-                return Err(TrackReadError::InvalidData {
+                return Err(LrbReadError::InvalidData {
                     name: "grid version".to_string(),
                     value: other.to_string(),
                 });

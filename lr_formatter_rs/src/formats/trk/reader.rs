@@ -6,14 +6,11 @@ use std::{
 use byteorder::{LittleEndian, ReadBytesExt};
 
 use crate::{
-    formats::{
-        TrackReadError,
-        trk::{
-            FEATURE_BACKGROUND_COLOR_B, FEATURE_BACKGROUND_COLOR_G, FEATURE_BACKGROUND_COLOR_R,
-            FEATURE_FRICTIONLESS, FEATURE_GRAVITY_WELL_SIZE, FEATURE_LINE_COLOR_B,
-            FEATURE_LINE_COLOR_G, FEATURE_REMOUNT, FEATURE_START_ZOOM, FEATURE_TRIGGERS,
-            FEATURE_X_GRAVITY, FEATURE_Y_GRAVITY, FEATURE_ZERO_START,
-        },
+    formats::trk::{
+        FEATURE_BACKGROUND_COLOR_B, FEATURE_BACKGROUND_COLOR_G, FEATURE_BACKGROUND_COLOR_R,
+        FEATURE_FRICTIONLESS, FEATURE_GRAVITY_WELL_SIZE, FEATURE_LINE_COLOR_B,
+        FEATURE_LINE_COLOR_G, FEATURE_REMOUNT, FEATURE_START_ZOOM, FEATURE_TRIGGERS,
+        FEATURE_X_GRAVITY, FEATURE_Y_GRAVITY, FEATURE_ZERO_START, TrkReadError,
     },
     track::{
         BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
@@ -27,7 +24,7 @@ use super::{
     FEATURE_SCENERY_WIDTH, FEATURE_SONG_INFO,
 };
 
-pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
+pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
     let track_builder = &mut TrackBuilder::default();
 
     let mut cursor = Cursor::new(data);
@@ -37,7 +34,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     cursor.read_exact(&mut magic_number)?;
 
     if magic_number != [b'T', b'R', b'K', 0xF2] {
-        return Err(TrackReadError::InvalidData {
+        return Err(TrkReadError::InvalidData {
             name: "magic number".to_string(),
             value: bytes_to_hex_string(&magic_number),
         });
@@ -47,7 +44,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     let version = cursor.read_u8()?;
 
     if version > 1 {
-        return Err(TrackReadError::InvalidData {
+        return Err(TrkReadError::InvalidData {
             name: "version".to_string(),
             value: version.to_string(),
         });
@@ -92,7 +89,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
             .collect();
 
         if song_data.len() != 2 {
-            return Err(TrackReadError::InvalidData {
+            return Err(TrkReadError::InvalidData {
                 name: "song data".to_string(),
                 value: song_data.join(","),
             });
@@ -125,7 +122,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
             2 => LineType::Acceleration,
             0 => LineType::Scenery,
             other => {
-                return Err(TrackReadError::InvalidData {
+                return Err(TrkReadError::InvalidData {
                     name: "line type".to_string(),
                     value: other.to_string(),
                 });
@@ -233,7 +230,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
     cursor.read_exact(&mut meta_magic_number)?;
 
     if &meta_magic_number != b"META" {
-        return Err(TrackReadError::InvalidData {
+        return Err(TrkReadError::InvalidData {
             name: "metadata magic number".to_string(),
             value: bytes_to_hex_string(&meta_magic_number),
         });
@@ -257,7 +254,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
         let key_value_pair: Vec<&str> = meta_string.split("=").filter(|s| !s.is_empty()).collect();
 
         if key_value_pair.len() != 2 {
-            return Err(TrackReadError::InvalidData {
+            return Err(TrkReadError::InvalidData {
                 name: "metadata key value pair".to_string(),
                 value: key_value_pair.join(","),
             });
@@ -302,7 +299,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                     let values: Vec<&str> = trigger.split(':').filter(|s| !s.is_empty()).collect();
 
                     if values.is_empty() {
-                        return Err(TrackReadError::InvalidData {
+                        return Err(TrkReadError::InvalidData {
                             name: "size of trigger data".to_string(),
                             value: "0".to_string(),
                         });
@@ -355,7 +352,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                                 .event(line_color_event);
                         }
                         other => {
-                            return Err(TrackReadError::InvalidData {
+                            return Err(TrkReadError::InvalidData {
                                 name: format!("triggers {} type", i),
                                 value: other.to_string(),
                             });
@@ -364,7 +361,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrackReadError> {
                 }
             }
             other => {
-                return Err(TrackReadError::InvalidData {
+                return Err(TrkReadError::InvalidData {
                     name: "metadata key".to_string(),
                     value: other.to_string(),
                 });

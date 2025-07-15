@@ -1,10 +1,12 @@
 //! Format used by the updated web version of Line Rider, [linerider.com](https://www.linerider.com/)
 
+mod error;
 mod reader;
 mod serde_boolean;
 mod serde_line_array;
 mod writer;
 
+pub use error::{JsonReadError, JsonWriteError};
 pub use reader::read;
 pub use writer::write;
 

@@ -58,10 +58,10 @@ pub(in crate::formats::lrb) static SIMLINE: Lazy<ModHandler> = Lazy::new(|| ModH
         Ok(())
     }),
     write: Box::new(|cursor, track| {
-        cursor.write_u32::<LittleEndian>(
-            (track.line_group().acceleration_lines().len()
-                + track.line_group().standard_lines().len()) as u32,
-        )?;
+        cursor.write_u32::<LittleEndian>(u32::try_from(
+            track.line_group().acceleration_lines().len()
+                + track.line_group().standard_lines().len(),
+        )?)?;
 
         for line in track.line_group().standard_lines() {
             let mut line_flags: u8 = 0;

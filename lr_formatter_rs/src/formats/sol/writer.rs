@@ -39,7 +39,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, SolWriteError> {
         line_object.insert("5".to_string(), Amf0Value::Number(inv));
         line_object.insert("6".to_string(), Amf0Value::Number(0.0));
         line_object.insert("7".to_string(), Amf0Value::Number(0.0));
-        line_object.insert("8".to_string(), Amf0Value::Number(line.id() as f64));
+        line_object.insert("8".to_string(), Amf0Value::Number(f64::from(line.id())));
         line_object.insert("9".to_string(), Amf0Value::Number(numeric_line_type));
         lines_vec.push(line_object);
     }
@@ -58,7 +58,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, SolWriteError> {
         line_object.insert("5".to_string(), Amf0Value::Number(inv));
         line_object.insert("6".to_string(), Amf0Value::Number(0.0));
         line_object.insert("7".to_string(), Amf0Value::Number(0.0));
-        line_object.insert("8".to_string(), Amf0Value::Number(line.id() as f64));
+        line_object.insert("8".to_string(), Amf0Value::Number(f64::from(line.id())));
         line_object.insert("9".to_string(), Amf0Value::Number(numeric_line_type));
         lines_vec.push(line_object);
     }
@@ -73,7 +73,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, SolWriteError> {
         line_object.insert("5".to_string(), Amf0Value::Number(0.0));
         line_object.insert("6".to_string(), Amf0Value::Number(0.0));
         line_object.insert("7".to_string(), Amf0Value::Number(0.0));
-        line_object.insert("8".to_string(), Amf0Value::Number(line.id() as f64));
+        line_object.insert("8".to_string(), Amf0Value::Number(f64::from(line.id())));
         line_object.insert("9".to_string(), Amf0Value::Number(2.0));
         lines_vec.push(line_object);
     }
@@ -97,9 +97,9 @@ pub fn write(track: &Track) -> Result<Vec<u8>, SolWriteError> {
     }
     .to_string();
 
-    let line_count = (track.line_group().standard_lines().len()
+    let line_count = track.line_group().standard_lines().len()
         + track.line_group().acceleration_lines().len()
-        + track.line_group().scenery_lines().len()) as f64;
+        + track.line_group().scenery_lines().len();
 
     let start_position = if let Some(start_pos) = track.metadata().start_position() {
         start_pos
@@ -147,7 +147,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, SolWriteError> {
         "startLine".to_string(),
         Amf0Value::ECMAArray(array_start_position),
     );
-    sol_track.insert("level".to_string(), Amf0Value::Number(line_count));
+    sol_track.insert("level".to_string(), Amf0Value::Number(line_count as f64));
     sol_track.insert("data".to_string(), Amf0Value::ECMAArray(line_array_object));
 
     if track.metadata().zero_velocity_start_riders() {

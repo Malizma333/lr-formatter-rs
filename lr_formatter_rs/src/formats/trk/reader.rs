@@ -72,7 +72,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
         loop {
             // Read 7BitEncodedInt song string length
             let byte = cursor.read_u8()?;
-            song_string_length |= ((byte & 0x7F) as usize) << bit_shift;
+            song_string_length |= usize::from(byte & 0x7F) << bit_shift;
 
             if byte & 0x80 == 0 {
                 break;
@@ -137,12 +137,12 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
 
         if line_type == LineType::Acceleration && included_features.contains(FEATURE_RED_MULTIPLIER)
         {
-            line_multiplier = cursor.read_u8()? as f64;
+            line_multiplier = f64::from(cursor.read_u8()?);
         }
 
         if line_type == LineType::Scenery {
             if included_features.contains(FEATURE_SCENERY_WIDTH) {
-                line_scenery_width = cursor.read_u8()? as f64 / 10.0;
+                line_scenery_width = f64::from(cursor.read_u8()?) / 10.0;
             }
         } else {
             line_id = cursor.read_u32::<LittleEndian>()?;
@@ -156,8 +156,8 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
             if included_features.contains(FEATURE_IGNORABLE_TRIGGER) {
                 let has_zoom_trigger = cursor.read_u8()?;
                 if has_zoom_trigger == 1 {
-                    let target_zoom = cursor.read_f32::<LittleEndian>()? as f64;
-                    let length = cursor.read_i16::<LittleEndian>()? as u32;
+                    let target_zoom = f64::from(cursor.read_f32::<LittleEndian>()?);
+                    let length = u32::try_from(cursor.read_i16::<LittleEndian>()?)?;
                     let zoom_event = CameraZoomEvent::new(target_zoom);
                     let line_hit = LineHitTrigger::new(line_id, length);
                     track_builder
@@ -265,34 +265,34 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
 
         match key {
             FEATURE_START_ZOOM => {
-                start_zoom = value.parse::<f32>()? as f64;
+                start_zoom = f64::from(value.parse::<f32>()?);
             }
             FEATURE_X_GRAVITY => {
-                start_gravity_x = value.parse::<f32>()? as f64;
+                start_gravity_x = f64::from(value.parse::<f32>()?);
             }
             FEATURE_Y_GRAVITY => {
-                start_gravity_y = value.parse::<f32>()? as f64;
+                start_gravity_y = f64::from(value.parse::<f32>()?);
             }
             FEATURE_GRAVITY_WELL_SIZE => {
                 gravity_well_size = value.parse::<f64>()?;
             }
             FEATURE_BACKGROUND_COLOR_R => {
-                start_bg_color_red = value.parse::<i32>()? as u8;
+                start_bg_color_red = u8::try_from(value.parse::<i32>()?)?;
             }
             FEATURE_BACKGROUND_COLOR_G => {
-                start_bg_color_green = value.parse::<i32>()? as u8;
+                start_bg_color_green = u8::try_from(value.parse::<i32>()?)?;
             }
             FEATURE_BACKGROUND_COLOR_B => {
-                start_bg_color_blue = value.parse::<i32>()? as u8;
+                start_bg_color_blue = u8::try_from(value.parse::<i32>()?)?;
             }
             FEATURE_LINE_COLOR_R => {
-                start_line_color_red = value.parse::<i32>()? as u8;
+                start_line_color_red = u8::try_from(value.parse::<i32>()?)?;
             }
             FEATURE_LINE_COLOR_G => {
-                start_line_color_green = value.parse::<i32>()? as u8;
+                start_line_color_green = u8::try_from(value.parse::<i32>()?)?;
             }
             FEATURE_LINE_COLOR_B => {
-                start_line_color_blue = value.parse::<i32>()? as u8;
+                start_line_color_blue = u8::try_from(value.parse::<i32>()?)?;
             }
             FEATURE_TRIGGERS => {
                 for (i, trigger) in value.split('&').filter(|s| !s.is_empty()).enumerate() {
@@ -308,9 +308,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
                     match values[0] {
                         "0" => {
                             // Zoom
-                            let target_zoom = values[1].parse::<f32>()? as f64;
-                            let start_frame = values[2].parse::<i32>()? as u32;
-                            let end_frame = values[3].parse::<i32>()? as u32;
+                            let target_zoom = f64::from(values[1].parse::<f32>()?);
+                            let start_frame = u32::try_from(values[2].parse::<i32>()?)?;
+                            let end_frame = u32::try_from(values[3].parse::<i32>()?)?;
                             let zoom_event = CameraZoomEvent::new(target_zoom);
                             let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
                             track_builder
@@ -321,11 +321,11 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
                         }
                         "1" => {
                             // Background Color
-                            let red = values[1].parse::<i32>()? as u8;
-                            let green = values[2].parse::<i32>()? as u8;
-                            let blue = values[3].parse::<i32>()? as u8;
-                            let start_frame = values[4].parse::<i32>()? as u32;
-                            let end_frame = values[5].parse::<i32>()? as u32;
+                            let red = u8::try_from(values[1].parse::<i32>()?)?;
+                            let green = u8::try_from(values[2].parse::<i32>()?)?;
+                            let blue = u8::try_from(values[3].parse::<i32>()?)?;
+                            let start_frame = u32::try_from(values[4].parse::<i32>()?)?;
+                            let end_frame = u32::try_from(values[5].parse::<i32>()?)?;
                             let bg_color_event =
                                 BackgroundColorEvent::new(RGBColor::new(red, green, blue));
                             let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);
@@ -337,11 +337,11 @@ pub fn read(data: Vec<u8>) -> Result<Track, TrkReadError> {
                         }
                         "2" => {
                             // Line Color
-                            let red = values[1].parse::<i32>()? as u8;
-                            let green = values[2].parse::<i32>()? as u8;
-                            let blue = values[3].parse::<i32>()? as u8;
-                            let start_frame = values[4].parse::<i32>()? as u32;
-                            let end_frame = values[5].parse::<i32>()? as u32;
+                            let red = u8::try_from(values[1].parse::<i32>()?)?;
+                            let green = u8::try_from(values[2].parse::<i32>()?)?;
+                            let blue = u8::try_from(values[3].parse::<i32>()?)?;
+                            let start_frame = u32::try_from(values[4].parse::<i32>()?)?;
+                            let end_frame = u32::try_from(values[5].parse::<i32>()?)?;
                             let line_color_event =
                                 LineColorEvent::new(RGBColor::new(red, green, blue));
                             let frame_bounds = FrameBoundsTrigger::new(start_frame, end_frame);

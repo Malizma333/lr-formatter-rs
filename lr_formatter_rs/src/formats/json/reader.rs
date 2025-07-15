@@ -17,7 +17,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
         "6.2" => GridVersion::V6_2,
         other => {
             return Err(JsonReadError::InvalidData {
-                name: "grid version".to_string(),
+                name: "grid version",
                 value: other.to_string(),
             });
         }
@@ -33,7 +33,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
                 2 => LineType::Scenery,
                 other => {
                     return Err(JsonReadError::InvalidData {
-                        name: "line type".to_string(),
+                        name: "line type",
                         value: other.to_string(),
                     });
                 }
@@ -127,7 +127,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
                             left_extension,
                             right_extension,
                         )
-                        .multiplier(multiplier as f64);
+                        .multiplier(f64::from(multiplier));
                 }
                 LRAJsonArrayLine::Scenery(id, x1, y1, x2, y2) => {
                     let endpoints = (Vec2::new(x1, y1), Vec2::new(x2, y2));
@@ -235,13 +235,13 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
     }
 
     let start_gravity_x = if let Some(x_gravity) = json_track.x_gravity {
-        x_gravity as f64
+        f64::from(x_gravity)
     } else {
         0.0
     };
 
     let start_gravity_y = if let Some(y_gravity) = json_track.y_gravity {
-        y_gravity as f64
+        f64::from(y_gravity)
     } else {
         1.0
     };
@@ -251,23 +251,23 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
     track_builder.metadata().start_gravity(start_gravity);
 
     if let Some(start_zoom) = json_track.start_zoom {
-        track_builder.metadata().start_zoom(start_zoom as f64);
+        track_builder.metadata().start_zoom(f64::from(start_zoom));
     }
 
     let init_line_red = if let Some(init_red) = json_track.line_color_red {
-        init_red as u8
+        u8::try_from(init_red)?
     } else {
         0
     };
 
     let init_line_green = if let Some(init_green) = json_track.line_color_green {
-        init_green as u8
+        u8::try_from(init_green)?
     } else {
         0
     };
 
     let init_line_blue = if let Some(init_blue) = json_track.line_color_blue {
-        init_blue as u8
+        u8::try_from(init_blue)?
     } else {
         0
     };
@@ -279,19 +279,19 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
     ));
 
     let init_bg_red = if let Some(init_red) = json_track.background_color_red {
-        init_red as u8
+        u8::try_from(init_red)?
     } else {
         244
     };
 
     let init_bg_green = if let Some(init_green) = json_track.background_color_green {
-        init_green as u8
+        u8::try_from(init_green)?
     } else {
         245
     };
 
     let init_bg_blue = if let Some(init_blue) = json_track.background_color_blue {
-        init_blue as u8
+        u8::try_from(init_blue)?
     } else {
         249
     };
@@ -304,7 +304,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
         for trigger in line_triggers {
             if trigger.zoom {
                 let line_hit = LineHitTrigger::new(trigger.id, trigger.frames);
-                let zoom_event = CameraZoomEvent::new(trigger.target as f64);
+                let zoom_event = CameraZoomEvent::new(f64::from(trigger.target));
                 track_builder
                     .legacy_camera_zoom_group()
                     .add_trigger()
@@ -315,11 +315,11 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
     }
 
     if let Some(time_triggers) = json_track.time_based_triggers {
-        for (i, trigger) in time_triggers.iter().enumerate() {
+        for trigger in time_triggers {
             match trigger.trigger_type {
                 0 => {
                     // Zoom
-                    let target_zoom = trigger.zoom_target as f64; // TODO: Scale correctly
+                    let target_zoom = f64::from(trigger.zoom_target); // TODO: Scale correctly
                     let start_frame = trigger.start;
                     let end_frame = trigger.end;
                     let zoom_event = CameraZoomEvent::new(target_zoom);
@@ -332,57 +332,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
                 }
                 1 => {
                     // Background Color
-                    let red = match &trigger.background_red {
-                        Some(bg_red_value) => match bg_red_value {
-                            FaultyU32::Valid(red) => *red as u8, // TODO: Replace unsafe as cast with error
-                            FaultyU32::Invalid(red) => {
-                                return Err(JsonReadError::InvalidData {
-                                    name: "background red".to_string(),
-                                    value: red.to_string(),
-                                });
-                            }
-                        },
-                        None => {
-                            return Err(JsonReadError::InvalidData {
-                                name: "background red".to_string(),
-                                value: "None".to_string(),
-                            });
-                        }
-                    };
-                    let green = match &trigger.background_green {
-                        Some(bg_green_value) => match bg_green_value {
-                            FaultyU32::Valid(green) => *green as u8,
-                            FaultyU32::Invalid(green) => {
-                                return Err(JsonReadError::InvalidData {
-                                    name: "background green".to_string(),
-                                    value: green.to_string(),
-                                });
-                            }
-                        },
-                        None => {
-                            return Err(JsonReadError::InvalidData {
-                                name: "background green".to_string(),
-                                value: "None".to_string(),
-                            });
-                        }
-                    };
-                    let blue = match &trigger.background_blue {
-                        Some(bg_blue_value) => match bg_blue_value {
-                            FaultyU32::Valid(blue) => *blue as u8,
-                            FaultyU32::Invalid(blue) => {
-                                return Err(JsonReadError::InvalidData {
-                                    name: "background blue".to_string(),
-                                    value: blue.to_string(),
-                                });
-                            }
-                        },
-                        None => {
-                            return Err(JsonReadError::InvalidData {
-                                name: "background blue".to_string(),
-                                value: "None".to_string(),
-                            });
-                        }
-                    };
+                    let red = extract_u8(&trigger.background_red, "background red")?;
+                    let green = extract_u8(&trigger.background_green, "background green")?;
+                    let blue = extract_u8(&trigger.background_blue, "background blue")?;
                     let start_frame = trigger.start;
                     let end_frame = trigger.end;
                     let bg_color_event = BackgroundColorEvent::new(RGBColor::new(red, green, blue));
@@ -395,57 +347,9 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
                 }
                 2 => {
                     // Line Color
-                    let red = match &trigger.line_red {
-                        Some(line_red_value) => match line_red_value {
-                            FaultyU32::Valid(red) => *red as u8, // TODO: Replace unsafe as cast with error
-                            FaultyU32::Invalid(red) => {
-                                return Err(JsonReadError::InvalidData {
-                                    name: "line red".to_string(),
-                                    value: red.to_string(),
-                                });
-                            }
-                        },
-                        None => {
-                            return Err(JsonReadError::InvalidData {
-                                name: "line red".to_string(),
-                                value: "None".to_string(),
-                            });
-                        }
-                    };
-                    let green = match &trigger.line_green {
-                        Some(line_green_value) => match line_green_value {
-                            FaultyU32::Valid(green) => *green as u8,
-                            FaultyU32::Invalid(green) => {
-                                return Err(JsonReadError::InvalidData {
-                                    name: "line green".to_string(),
-                                    value: green.to_string(),
-                                });
-                            }
-                        },
-                        None => {
-                            return Err(JsonReadError::InvalidData {
-                                name: "line green".to_string(),
-                                value: "None".to_string(),
-                            });
-                        }
-                    };
-                    let blue = match &trigger.line_blue {
-                        Some(line_blue_value) => match line_blue_value {
-                            FaultyU32::Valid(blue) => *blue as u8,
-                            FaultyU32::Invalid(blue) => {
-                                return Err(JsonReadError::InvalidData {
-                                    name: "line blue".to_string(),
-                                    value: blue.to_string(),
-                                });
-                            }
-                        },
-                        None => {
-                            return Err(JsonReadError::InvalidData {
-                                name: "line blue".to_string(),
-                                value: "None".to_string(),
-                            });
-                        }
-                    };
+                    let red = extract_u8(&trigger.line_red, "line red")?;
+                    let green = extract_u8(&trigger.line_green, "line green")?;
+                    let blue = extract_u8(&trigger.line_blue, "line blue")?;
                     let start_frame = trigger.start;
                     let end_frame = trigger.end;
                     let line_color_event = LineColorEvent::new(RGBColor::new(red, green, blue));
@@ -458,7 +362,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
                 }
                 other => {
                     return Err(JsonReadError::InvalidData {
-                        name: format!("triggers {} type", i),
+                        name: "trigger type",
                         value: other.to_string(),
                     });
                 }
@@ -467,4 +371,29 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
     }
 
     Ok(track_builder.build()?)
+}
+
+fn extract_u8(value: &Option<FaultyU32>, field: &'static str) -> Result<u8, JsonReadError> {
+    match value {
+        Some(bg_red_value) => match bg_red_value {
+            FaultyU32::Valid(red) => {
+                u8::try_from(*red).map_err(|_err| JsonReadError::InvalidData {
+                    name: field,
+                    value: red.to_string(),
+                })
+            }
+            FaultyU32::Invalid(red) => {
+                return Err(JsonReadError::InvalidData {
+                    name: field,
+                    value: red.to_string(),
+                });
+            }
+        },
+        None => {
+            return Err(JsonReadError::InvalidData {
+                name: field,
+                value: "None".to_string(),
+            });
+        }
+    }
 }

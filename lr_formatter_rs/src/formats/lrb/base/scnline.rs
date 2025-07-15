@@ -33,7 +33,8 @@ pub(in crate::formats::lrb) static SCNLINE: Lazy<ModHandler> = Lazy::new(|| ModH
         Ok(())
     }),
     write: Box::new(|cursor, track| {
-        cursor.write_u32::<LittleEndian>(track.line_group().scenery_lines().len() as u32)?;
+        cursor
+            .write_u32::<LittleEndian>(u32::try_from(track.line_group().scenery_lines().len())?)?;
         for scenery_line in track.line_group().scenery_lines() {
             cursor.write_u32::<LittleEndian>(scenery_line.id())?;
             cursor.write_f64::<LittleEndian>(scenery_line.x1())?;

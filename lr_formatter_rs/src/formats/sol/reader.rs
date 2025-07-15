@@ -9,7 +9,7 @@ use crate::{
 
 pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, SolReadError> {
     let track_builder = &mut TrackBuilder::default();
-    let data_size = data.len() as u64;
+    let data_size = u64::try_from(data.len())?;
     let mut cursor = Cursor::new(data);
 
     // Magic number
@@ -287,7 +287,7 @@ pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, SolReadErr
                 })?;
 
             let unsafe_id =
-                if id_float.is_finite() && id_float >= 0.0 && id_float <= u32::MAX as f64 {
+                if id_float.is_finite() && id_float >= 0.0 && id_float <= f64::from(u32::MAX) {
                     Some(id_float as u32)
                 } else {
                     None

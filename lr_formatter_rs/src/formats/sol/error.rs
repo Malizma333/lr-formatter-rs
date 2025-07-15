@@ -19,19 +19,21 @@ pub enum SolReadError {
     #[error("{0}")]
     Io(#[from] io::Error),
     #[error("{0}")]
+    TryFromInt(#[from] TryFromIntError),
+    #[error("{0}")]
     IntConversion(#[from] ParseIntError),
     #[error("{0}")]
     FloatConversion(#[from] ParseFloatError),
     #[error("{0}")]
     StringParsing(#[from] ParseLengthPrefixedStringError),
     #[error("{0}")]
-    TrackBuilderError(#[from] TrackBuilderError),
+    TrackGroup(#[from] TrackBuilderError),
     #[error("{0}")]
-    LineGroupBuilderError(#[from] LineGroupBuilderError),
+    LineGroup(#[from] LineGroupBuilderError),
     #[error("{0}")]
-    RiderGroupBuilderError(#[from] RiderGroupBuilderError),
+    RiderGroup(#[from] RiderGroupBuilderError),
     #[error("{0}")]
-    LayerGroupBuilderError(#[from] LayerGroupBuilderError),
+    LayerGroup(#[from] LayerGroupBuilderError),
     // TODO maybe remove this
     #[error("Invalid value for `{name}`: {value}")]
     InvalidData { name: String, value: String },

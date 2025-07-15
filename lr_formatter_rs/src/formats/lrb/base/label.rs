@@ -19,7 +19,7 @@ pub(in crate::formats::lrb) static LABEL: Lazy<ModHandler> = Lazy::new(|| ModHan
     }),
     write: Box::new(|cursor, track| {
         let title = track.metadata().title().clone().unwrap_or("".to_string());
-        cursor.write_u16::<LittleEndian>(title.len() as u16)?;
+        cursor.write_u16::<LittleEndian>(u16::try_from(title.len())?)?;
         cursor.write_all(title.as_bytes())?;
 
         Ok(())

@@ -65,7 +65,7 @@ pub fn read(data: Vec<u8>) -> Result<Track, LrbReadError> {
             // Return an error if we don't support the mod but it's required
             return Err(LrbReadError::UnsupportedRequiredMod { name, version });
         } else {
-            // TODO: Warn about unsupported mod not being included
+            // TODO: Attach warning about unsupported mod not being included
 
             // println!("[WARNING] This mod is not supported: {} v{}", name, version);
 

@@ -56,7 +56,7 @@ pub struct Metadata {
     lra_remount: bool,
     #[builder(default)]
     #[getset(get_clone = "pub")]
-    legacy_fakie: bool, // TODO more descriptive name
+    legacy_lra_fakie: bool,
     #[builder(default)]
     #[getset(get_clone = "pub")]
     zero_friction_riders: bool,

@@ -385,18 +385,14 @@ fn extract_u8(value: &Option<FaultyU32>, field: &'static str) -> Result<u8, Json
                     value: red.to_string(),
                 })
             }
-            FaultyU32::Invalid(red) => {
-                return Err(JsonReadError::InvalidData {
-                    name: field,
-                    value: red.to_string(),
-                });
-            }
-        },
-        None => {
-            return Err(JsonReadError::InvalidData {
+            FaultyU32::Invalid(red) => Err(JsonReadError::InvalidData {
                 name: field,
-                value: "None".to_string(),
-            });
-        }
+                value: red.to_string(),
+            }),
+        },
+        None => Err(JsonReadError::InvalidData {
+            name: field,
+            value: "None".to_string(),
+        }),
     }
 }

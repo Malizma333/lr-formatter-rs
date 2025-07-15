@@ -4,7 +4,7 @@ use std::{fs::File, io::Read};
 fn main() {
     // Read a track file
     let mut input_data = Vec::new();
-    File::open("./examples/samples/HAM.trk")
+    File::open("../samples/HAM.trk")
         .unwrap()
         .read_to_end(&mut input_data)
         .unwrap();

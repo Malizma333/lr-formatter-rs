@@ -2,8 +2,6 @@ use crate::track::Vec2;
 use derive_builder::Builder;
 use getset::CloneGetters;
 
-// TODO make mod for f32 vecs (single precision mod for all non-physics f64s?)
-
 #[derive(CloneGetters, Builder)]
 #[getset(get_clone = "pub")]
 pub struct SceneryLine {

@@ -58,7 +58,6 @@ define_group_builder!(
     }
 );
 
-// TODO fix build functions to enable features before checking them
 impl GroupBuilder for TrackBuilder {
     fn build_group(&mut self) -> Result<Track, TrackBuilderError> {
         let metadata = self.metadata.build().map_group_err()?;

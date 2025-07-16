@@ -41,24 +41,36 @@ impl GroupBuilder for LineGroupBuilder {
 
         for acceleration_line_builder in &self.acceleration_lines {
             let acceleration_line = acceleration_line_builder.build().map_group_err()?;
+            if acceleration_line.multiplier().is_some() {
+                self.features.insert(LineFeature::AccelerationMultiplier);
+            }
+            acceleration_lines.push(acceleration_line);
+        }
+
+        for acceleration_line in &acceleration_lines {
             Self::check_feature(
                 &mut self.features,
                 LineFeature::AccelerationMultiplier,
                 &acceleration_line.multiplier(),
                 "multiplier",
             )?;
-            acceleration_lines.push(acceleration_line);
         }
 
         for scenery_line_builder in &self.scenery_lines {
             let scenery_line = scenery_line_builder.build().map_group_err()?;
+            if scenery_line.width().is_some() {
+                self.features.insert(LineFeature::SceneryWidth);
+            }
+            scenery_lines.push(scenery_line);
+        }
+
+        for scenery_line in &scenery_lines {
             Self::check_feature(
                 &mut self.features,
                 LineFeature::SceneryWidth,
                 &scenery_line.width(),
                 "width",
             )?;
-            scenery_lines.push(scenery_line);
         }
 
         Ok(LineGroup {

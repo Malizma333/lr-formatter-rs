@@ -27,6 +27,19 @@ impl GroupBuilder for RiderGroupBuilder {
 
         for rider_builder in &self.riders {
             let rider = rider_builder.build().map_group_err()?;
+            if rider.can_remount().is_some() {
+                self.features.insert(RiderFeature::Remount);
+            }
+            if rider.start_angle().is_some() {
+                self.features.insert(RiderFeature::StartAngle);
+            }
+            if rider.start_velocity().is_some() {
+                self.features.insert(RiderFeature::StartVelocity);
+            }
+            riders.push(rider);
+        }
+
+        for rider in &riders {
             Self::check_feature(
                 &mut self.features,
                 RiderFeature::StartVelocity,
@@ -45,7 +58,6 @@ impl GroupBuilder for RiderGroupBuilder {
                 &rider.can_remount(),
                 "can_remount",
             )?;
-            riders.push(rider);
         }
 
         Ok(RiderGroup {

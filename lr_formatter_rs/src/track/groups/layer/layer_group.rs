@@ -33,6 +33,22 @@ impl GroupBuilder for LayerGroupBuilder {
 
         for layer_builder in &self.layers {
             let layer = layer_builder.build().map_group_err()?;
+            if layer.name().is_some() {
+                self.features.insert(LayerFeature::Name);
+            }
+            if layer.visible().is_some() {
+                self.features.insert(LayerFeature::Visible);
+            }
+            if layer.editable().is_some() {
+                self.features.insert(LayerFeature::Editable);
+            }
+            if layer.folder_id().is_some() {
+                self.features.insert(LayerFeature::Folders);
+            }
+            layers.push(layer);
+        }
+
+        for layer in &layers {
             Self::check_feature(
                 &mut self.features,
                 LayerFeature::Name,
@@ -57,7 +73,6 @@ impl GroupBuilder for LayerGroupBuilder {
                 &layer.folder_id(),
                 "folder_id",
             )?;
-            layers.push(layer);
         }
 
         Self::check_feature(
@@ -72,6 +87,19 @@ impl GroupBuilder for LayerGroupBuilder {
 
             for layer_folder_builder in layer_folder_builders {
                 let layer_folder = layer_folder_builder.build().map_group_err()?;
+                if layer_folder.name().is_some() {
+                    self.features.insert(LayerFeature::Name);
+                }
+                if layer_folder.visible().is_some() {
+                    self.features.insert(LayerFeature::Visible);
+                }
+                if layer_folder.editable().is_some() {
+                    self.features.insert(LayerFeature::Editable);
+                }
+                some_layer_folders.push(layer_folder);
+            }
+
+            for layer_folder in &some_layer_folders {
                 Self::check_feature(
                     &mut self.features,
                     LayerFeature::Name,
@@ -90,7 +118,6 @@ impl GroupBuilder for LayerGroupBuilder {
                     &layer_folder.editable(),
                     "editable",
                 )?;
-                some_layer_folders.push(layer_folder);
             }
 
             layer_folders = Some(some_layer_folders);

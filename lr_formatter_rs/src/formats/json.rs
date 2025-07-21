@@ -137,7 +137,10 @@ struct JsonRider {
     start_vel: V2,
     #[serde(rename = "startAngle", skip_serializing_if = "Option::is_none")]
     angle: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "option_bool_from_any"
+    )]
     remountable: Option<bool>,
 }
 

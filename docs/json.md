@@ -25,7 +25,7 @@
       "startPosition": { "x": f64, "y": f64 },
       "startVelocity": { "x": f64, "y": f64 },
       "startAngle"?: f64,
-      "remountable"?: 0 | 1,
+      "remountable"?: 0 | 1 | false | true,
     },
     ...
   ],

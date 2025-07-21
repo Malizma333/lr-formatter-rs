@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 use dialoguer::Input;
 use lr_formatter_rs::formats::{json, lrb, sol, trk};
@@ -116,13 +116,16 @@ fn run() -> Result<()> {
         Format::TRK => ".trk",
         Format::Json => ".track.json",
     };
-    let output_file_name = &args
-        .output_file
-        .unwrap_or(input_name.to_string() + " (Converted)" + output_extension);
+    let output_file_name = args.output_file.unwrap_or_else(|| {
+        let file_name = format!("{} (Converted){}", input_name, output_extension);
+        let parent_dir = input_path.parent().unwrap_or_else(|| Path::new("."));
+        parent_dir.join(file_name).to_string_lossy().into_owned()
+    });
+
     let output_data =
         &convert(input_data, input_format, output_format).context("Conversion failed")?;
 
-    File::create(output_file_name)
+    File::create(&output_file_name)
         .with_context(|| format!("Failed to create output file '{}'", output_file_name))?
         .write_all(output_data)
         .context("Failed to write output file")?;

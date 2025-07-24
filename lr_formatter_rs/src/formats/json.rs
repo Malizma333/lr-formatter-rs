@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 use serde_boolean::option_bool_from_any;
 
 // TODO: fix lines loading one-dimensional? look at testTrack.track.json from lr-core/fixtures
-// TODO: add base layer to writing json (or add in solver)
 
 // LRA line array types:
 // [type: 0, id: int, x1: double, y1: double, x2: double, y2: double, extended: u8, flipped: bool]

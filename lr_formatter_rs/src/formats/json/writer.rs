@@ -112,6 +112,17 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
         for layer in tupled_layers {
             layers.push(layer.1);
         }
+    } else {
+        // Default layer
+        layers.push(JsonLayer {
+            id: 0,
+            layer_type: Some(LAYER_TYPE_LAYER),
+            name: "Base Layer".to_string(),
+            visible: true,
+            editable: Some(true),
+            folder_id: None,
+            size: None,
+        });
     }
 
     if let Some(rider_group) = track.rider_group() {

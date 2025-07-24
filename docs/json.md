@@ -25,6 +25,8 @@
       "startPosition": { "x": f64, "y": f64 },
       "startVelocity": { "x": f64, "y": f64 },
       "startAngle"?: f64,
+      // true/false for remount rider v1, 0/1 for remount rider v2
+      // TODO: Preserve loaded value
       "remountable"?: 0 | 1 | false | true,
     },
     ...

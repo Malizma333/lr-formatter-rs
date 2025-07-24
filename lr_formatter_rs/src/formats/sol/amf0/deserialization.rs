@@ -16,10 +16,11 @@ struct ObjectProperty {
 pub(in crate::formats::sol) fn deserialize<R: Read>(
     bytes: &mut R,
 ) -> Result<Vec<Amf0Value>, Amf0DeserializationError> {
+    let mut references = vec![];
     let mut results = vec![];
 
     loop {
-        match read_next_value(bytes)? {
+        match read_next_value(bytes, &mut references)? {
             Some(x) => results.push(x),
             None => break,
         };
@@ -28,7 +29,10 @@ pub(in crate::formats::sol) fn deserialize<R: Read>(
     Ok(results)
 }
 
-fn read_next_value<R: Read>(bytes: &mut R) -> Result<Option<Amf0Value>, Amf0DeserializationError> {
+fn read_next_value<R: Read>(
+    bytes: &mut R,
+    references: &mut Vec<Amf0Value>,
+) -> Result<Option<Amf0Value>, Amf0DeserializationError> {
     let mut buffer: [u8; 1] = [0];
     let bytes_read = bytes.read(&mut buffer)?;
 
@@ -45,10 +49,11 @@ fn read_next_value<R: Read>(bytes: &mut R) -> Result<Option<Amf0Value>, Amf0Dese
         markers::NULL_MARKER => parse_null().map(Some),
         markers::UNDEFINED_MARKER => parse_undefined().map(Some),
         markers::NUMBER_MARKER => parse_number(bytes).map(Some),
-        markers::OBJECT_MARKER => parse_object(bytes).map(Some),
-        markers::ECMA_ARRAY_MARKER => parse_ecma_array(bytes).map(Some),
+        markers::OBJECT_MARKER => parse_object(bytes, references).map(Some),
+        markers::ECMA_ARRAY_MARKER => parse_ecma_array(bytes, references).map(Some),
         markers::STRING_MARKER => parse_string(bytes).map(Some),
-        markers::STRICT_ARRAY_MARKER => parse_strict_array(bytes).map(Some),
+        markers::STRICT_ARRAY_MARKER => parse_strict_array(bytes, references).map(Some),
+        markers::REFERENCE_MARKER => parse_reference(bytes, references).map(Some),
         _ => Err(Amf0DeserializationError::UnknownMarker { marker: buffer[0] }),
     }
 }
@@ -87,21 +92,28 @@ fn parse_string<R: Read>(bytes: &mut R) -> Result<Amf0Value, Amf0Deserialization
     Ok(Amf0Value::Utf8String(value))
 }
 
-fn parse_object<R: Read>(bytes: &mut R) -> Result<Amf0Value, Amf0DeserializationError> {
+fn parse_object<R: Read>(
+    bytes: &mut R,
+    references: &mut Vec<Amf0Value>,
+) -> Result<Amf0Value, Amf0DeserializationError> {
     let mut properties = HashMap::new();
 
     loop {
-        match parse_object_property(bytes)? {
+        match parse_object_property(bytes, references)? {
             Some(property) => properties.insert(property.label, property.value),
             None => break,
         };
     }
 
     let deserialized_value = Amf0Value::Object(properties);
+    references.push(deserialized_value.clone());
     Ok(deserialized_value)
 }
 
-fn parse_ecma_array<R: Read>(bytes: &mut R) -> Result<Amf0Value, Amf0DeserializationError> {
+fn parse_ecma_array<R: Read>(
+    bytes: &mut R,
+    references: &mut Vec<Amf0Value>,
+) -> Result<Amf0Value, Amf0DeserializationError> {
     // An ECMA array is an array of values indexed via strings instead of numeric indexes (so
     // essentially a hash map).  It seems functionally equivalent to an object so for simplicity
     // treat it as such.
@@ -113,15 +125,18 @@ fn parse_ecma_array<R: Read>(bytes: &mut R) -> Result<Amf0Value, Amf0Deserializa
     // like we can ignore the associative count and just read exactly as we would an object.
 
     let _associative_count = bytes.read_u32::<BigEndian>()?;
-    parse_object(bytes)
+    parse_object(bytes, references)
 }
 
-fn parse_strict_array<R: Read>(bytes: &mut R) -> Result<Amf0Value, Amf0DeserializationError> {
+fn parse_strict_array<R: Read>(
+    bytes: &mut R,
+    references: &mut Vec<Amf0Value>,
+) -> Result<Amf0Value, Amf0DeserializationError> {
     let _array_count = bytes.read_u32::<BigEndian>()?;
     let mut values: Vec<Amf0Value> = Vec::new();
 
     for _ in 0.._array_count {
-        match read_next_value(bytes)? {
+        match read_next_value(bytes, references)? {
             Some(value) => {
                 values.push(value);
             }
@@ -129,11 +144,14 @@ fn parse_strict_array<R: Read>(bytes: &mut R) -> Result<Amf0Value, Amf0Deseriali
         };
     }
 
+    references.push(Amf0Value::StrictArray(values.clone()));
+
     Ok(Amf0Value::StrictArray(values))
 }
 
 fn parse_object_property<R: Read>(
     bytes: &mut R,
+    references: &mut Vec<Amf0Value>,
 ) -> Result<Option<ObjectProperty>, Amf0DeserializationError> {
     let label_length = bytes.read_u16::<BigEndian>()?;
     if label_length == 0 {
@@ -152,13 +170,21 @@ fn parse_object_property<R: Read>(
 
     let label = String::from_utf8(label_buffer)?;
 
-    match read_next_value(bytes)? {
+    match read_next_value(bytes, references)? {
         None => Err(Amf0DeserializationError::UnexpectedEof),
         Some(property_value) => Ok(Some(ObjectProperty {
             label,
             value: property_value,
         })),
     }
+}
+
+fn parse_reference<R: Read>(
+    bytes: &mut R,
+    references: &Vec<Amf0Value>,
+) -> Result<Amf0Value, Amf0DeserializationError> {
+    let index = bytes.read_u16::<BigEndian>()?;
+    Ok(references[index as usize].clone())
 }
 
 #[cfg(test)]

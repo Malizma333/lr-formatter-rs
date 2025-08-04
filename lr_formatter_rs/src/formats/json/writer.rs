@@ -41,7 +41,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
             x1: line.x1(),
             y1: line.y1(),
             x2: line.x2(),
-            y2: line.y1(),
+            y2: line.y2(),
             flipped: Some(line.flipped()),
             left_ext: Some(line.left_extension()),
             right_ext: Some(line.right_extension()),

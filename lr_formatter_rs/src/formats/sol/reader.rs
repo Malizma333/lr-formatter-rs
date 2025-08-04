@@ -248,13 +248,7 @@ pub fn read(data: Vec<u8>, track_index: Option<u32>) -> Result<Track, SolReadErr
                 value: format!("{:?}", line),
             })?;
 
-            let ext = ext_amf
-                .clone()
-                .get_number()
-                .ok_or(SolReadError::InvalidData {
-                    name: "line extension".to_string(),
-                    value: format!("{:?}", ext_amf),
-                })?;
+            let ext = ext_amf.clone().get_number().unwrap_or(0.0);
 
             let left_extension = ext == 1.0 || ext == 3.0;
             let right_extension = ext == 2.0 || ext == 3.0;

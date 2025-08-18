@@ -1,8 +1,8 @@
 use crate::{
-    formats::json::{FaultyU32, JsonReadError, JsonTrack, LRAJsonArrayLine},
+    formats::json::{FaultyBool, FaultyU32, JsonReadError, JsonTrack, LRAJsonArrayLine},
     track::{
         BackgroundColorEvent, CameraZoomEvent, FrameBoundsTrigger, GridVersion, LineColorEvent,
-        LineHitTrigger, LineType, RGBColor, Track, TrackBuilder, Vec2,
+        LineHitTrigger, LineType, RGBColor, RemountVersion, Track, TrackBuilder, Vec2,
     },
     util::scale_factor::from_lra_zoom,
 };
@@ -47,12 +47,24 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
             } else if let Some(ext) = line.extended {
                 (ext & 1 != 0, ext & 2 != 0)
             } else if let (Some(left_ext), Some(right_ext)) = (line.left_ext, line.right_ext) {
-                (left_ext, right_ext)
+                let left_ext_bool = match left_ext {
+                    FaultyBool::BoolRep(x) => x,
+                    FaultyBool::IntRep(x) => x == 1,
+                };
+                let right_ext_bool = match right_ext {
+                    FaultyBool::BoolRep(x) => x,
+                    FaultyBool::IntRep(x) => x == 1,
+                };
+                (left_ext_bool, right_ext_bool)
             } else {
                 (false, false)
             };
 
-            let flipped = line.flipped.unwrap_or(false);
+            let flipped = match line.flipped {
+                None => false,
+                Some(FaultyBool::BoolRep(x)) => x,
+                Some(FaultyBool::IntRep(x)) => x == 1,
+            };
 
             match line_type {
                 LineType::Standard => {
@@ -195,8 +207,15 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
                 rider_builder.start_angle(angle);
             }
 
-            if let Some(remount) = rider.remountable {
-                rider_builder.can_remount(remount);
+            rider_builder.remount_version(RemountVersion::None);
+
+            if let Some(remount) = &rider.remountable {
+                let (remount_bool, remount_version) = match remount {
+                    FaultyBool::BoolRep(x) => (*x, RemountVersion::ComV1),
+                    FaultyBool::IntRep(x) => (*x == 1, RemountVersion::ComV2),
+                };
+                rider_builder.can_remount(remount_bool);
+                rider_builder.remount_version(remount_version);
             }
         }
     }

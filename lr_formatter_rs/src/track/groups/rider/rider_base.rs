@@ -1,4 +1,4 @@
-use crate::track::Vec2;
+use crate::track::{RemountVersion, Vec2};
 use derive_builder::Builder;
 use getset::CloneGetters;
 
@@ -12,4 +12,5 @@ pub struct Rider {
     start_angle: Option<f64>,
     #[builder(setter(strip_option), default)]
     can_remount: Option<bool>,
+    remount_version: RemountVersion,
 }

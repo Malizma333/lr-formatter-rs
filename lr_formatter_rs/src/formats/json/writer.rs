@@ -1,9 +1,9 @@
 use crate::{
     formats::json::{
-        FaultyU32, JsonLayer, JsonLine, JsonReadError, JsonRider, JsonTrack, LAYER_TYPE_FOLDER,
-        LAYER_TYPE_LAYER, V2,
+        FaultyBool, FaultyU32, JsonLayer, JsonLine, JsonReadError, JsonRider, JsonTrack,
+        LAYER_TYPE_FOLDER, LAYER_TYPE_LAYER, V2,
     },
-    track::{GridVersion, Track},
+    track::{GridVersion, RemountVersion, Track},
 };
 
 pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
@@ -25,9 +25,9 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
             y1: line.y1(),
             x2: line.x2(),
             y2: line.y2(),
-            flipped: Some(line.flipped()),
-            left_ext: Some(line.left_extension()),
-            right_ext: Some(line.right_extension()),
+            flipped: Some(FaultyBool::BoolRep(line.flipped())),
+            left_ext: Some(FaultyBool::BoolRep(line.left_extension())),
+            right_ext: Some(FaultyBool::BoolRep(line.right_extension())),
             extended: None,
             multiplier: None,
             width: None,
@@ -42,9 +42,9 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
             y1: line.y1(),
             x2: line.x2(),
             y2: line.y2(),
-            flipped: Some(line.flipped()),
-            left_ext: Some(line.left_extension()),
-            right_ext: Some(line.right_extension()),
+            flipped: Some(FaultyBool::BoolRep(line.flipped())),
+            left_ext: Some(FaultyBool::BoolRep(line.left_extension())),
+            right_ext: Some(FaultyBool::BoolRep(line.right_extension())),
             extended: None,
             multiplier: line.multiplier(),
             width: None,
@@ -141,11 +141,25 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
                 V2 { x: 0.4, y: 0.0 }
             };
 
+            let remountable = match rider.remount_version() {
+                RemountVersion::None => None,
+                RemountVersion::ComV1 => {
+                    Some(FaultyBool::BoolRep(rider.can_remount().unwrap_or(false)))
+                }
+                RemountVersion::ComV2 => Some(FaultyBool::IntRep(
+                    if rider.can_remount().unwrap_or(false) {
+                        1
+                    } else {
+                        0
+                    },
+                )),
+            };
+
             riders.push(JsonRider {
                 start_pos: start_position,
                 start_vel: start_velocity,
                 angle: rider.start_angle(),
-                remountable: rider.can_remount(),
+                remountable: remountable,
             });
         }
     } else {
@@ -153,7 +167,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
             start_pos: V2 { x: 0.0, y: 0.0 },
             start_vel: V2 { x: 0.4, y: 0.0 },
             angle: Some(0.0),
-            remountable: Some(true),
+            remountable: Some(FaultyBool::IntRep(1)),
         });
     }
 

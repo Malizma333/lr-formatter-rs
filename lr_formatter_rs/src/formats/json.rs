@@ -2,7 +2,6 @@
 
 mod error;
 mod reader;
-mod serde_boolean;
 mod serde_line_array;
 mod writer;
 
@@ -11,9 +10,28 @@ pub use reader::read;
 pub use writer::write;
 
 use serde::{Deserialize, Serialize};
-use serde_boolean::option_bool_from_any;
 
-// TODO: fix lines loading one-dimensional? look at testTrack.track.json from lr-core/fixtures
+// A u32 value that can take the range of a normal u32, or negative for invalid (for parsing some json fields)
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+enum FaultyU32 {
+    Valid(u32),
+    Invalid(i32),
+}
+
+// A bool value that take on either a boolean representation or int representation
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+enum FaultyBool {
+    BoolRep(bool),
+    IntRep(u8),
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+struct V2 {
+    x: f64,
+    y: f64,
+}
 
 // LRA line array types:
 // [type: 0, id: int, x1: double, y1: double, x2: double, y2: double, extended: u8, flipped: bool]
@@ -62,20 +80,6 @@ struct LRAJsonTrigger {
     line_blue: Option<FaultyU32>,
 }
 
-// A u32 value that can take the range of a normal u32, or negative for invalid (for parsing some json fields)
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-enum FaultyU32 {
-    Valid(u32),
-    Invalid(i32),
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-struct V2 {
-    x: f64,
-    y: f64,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 struct JsonLine {
     id: u32,
@@ -85,27 +89,20 @@ struct JsonLine {
     y1: f64,
     x2: f64,
     y2: f64,
-
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "option_bool_from_any"
-    )]
-    flipped: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    flipped: Option<FaultyBool>,
     #[serde(
         default,
         rename = "leftExtended",
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "option_bool_from_any"
+        skip_serializing_if = "Option::is_none"
     )]
-    left_ext: Option<bool>,
+    left_ext: Option<FaultyBool>,
     #[serde(
         default,
         rename = "rightExtended",
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "option_bool_from_any"
+        skip_serializing_if = "Option::is_none"
     )]
-    right_ext: Option<bool>,
+    right_ext: Option<FaultyBool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     extended: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -139,11 +136,8 @@ struct JsonRider {
     start_vel: V2,
     #[serde(rename = "startAngle", skip_serializing_if = "Option::is_none")]
     angle: Option<f64>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "option_bool_from_any"
-    )]
-    remountable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    remountable: Option<FaultyBool>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

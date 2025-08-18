@@ -159,7 +159,7 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
                 start_pos: start_position,
                 start_vel: start_velocity,
                 angle: rider.start_angle(),
-                remountable: remountable,
+                remountable,
             });
         }
     } else {

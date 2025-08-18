@@ -42,12 +42,12 @@ pub fn read(data: Vec<u8>) -> Result<Track, LrbReadError> {
         let flags = cursor.read_u8()?;
 
         let mut offset = 0u64;
-        let mut length = 0u64;
+        let mut _length = 0u64;
 
         // Data address
         if flags & mod_flags::EXTRA_DATA != 0 {
             offset = cursor.read_u64::<LittleEndian>()?;
-            length = cursor.read_u64::<LittleEndian>()?;
+            _length = cursor.read_u64::<LittleEndian>()?;
         }
 
         let mod_identifier = (name.as_str(), version);

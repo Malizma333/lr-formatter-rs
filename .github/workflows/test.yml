@@ -26,4 +26,6 @@ jobs:
           toolchain: stable
           override: true
 
-      - run: cargo test --all
+      - run: |
+          cd lr_formatter_rs && \
+          cargo test --all

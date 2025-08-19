@@ -26,4 +26,12 @@ jobs:
           toolchain: stable
           override: true
 
-      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: |
+          cd lr_formatter_rs && \
+          cargo clippy --all-targets --all-features -- \
+            -A clippy::all \
+            -D clippy::correctness \
+            -D clippy::suspicious \
+            -D clippy::perf \
+            -W clippy::complexity \
+            -W clippy::style

@@ -36,6 +36,7 @@
   - `ext`
     - Bit flags representing line extensions: 0=None, 1=Left, 2=Right, 3=Both
     - 0 for green lines
+    - Undefined in 6.7
   - `type`
     - 0 for blue lines, 1 for red lines, and 2 for green lines
   - `prevLineId`
@@ -63,7 +64,7 @@
         Number (f64),
         Number (f64),
         Number (f64),
-        Number (0 - 3),
+        Number (0 - 3) | Undefined,
         Number (0 - 1) | Boolean,
         Number (u32),
         Number (u32),

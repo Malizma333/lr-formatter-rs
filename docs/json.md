@@ -3,9 +3,9 @@
 ```js
 {
   // Shared properties
-  "label": string,
+  "label"?: string,
   "version": "6.0" | "6.1" | "6.2",
-  "startPosition": { "x": f64, "y": f64 },
+  "startPosition"?: { "x": f64, "y": f64 },
   "lineArray"?: [ // Legacy line array format, not in current web version
     [
       [0, u32, f64, f64, f64, f64, 0 | 1 | 2 | 3, bool],
@@ -19,7 +19,7 @@
   "creator"?: string,
   "description"?: string,
   "script"?: string,
-  "duration": u32,
+  "duration"?: u32,
   "riders": [
     {
       "startPosition": { "x": f64, "y": f64 },

@@ -220,11 +220,15 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
         }
     }
 
-    track_builder
-        .metadata()
-        .start_position(Vec2::new(json_track.start_pos.x, json_track.start_pos.y));
+    if let Some(start_pos) = json_track.start_pos {
+        track_builder
+            .metadata()
+            .start_position(Vec2::new(start_pos.x, start_pos.y));
+    }
 
-    track_builder.metadata().title(json_track.label);
+    if let Some(label) = json_track.label {
+        track_builder.metadata().title(label);
+    }
 
     if let Some(creator) = json_track.creator {
         track_builder.metadata().artist(creator);

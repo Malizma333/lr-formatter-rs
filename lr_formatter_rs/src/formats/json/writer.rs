@@ -172,15 +172,15 @@ pub fn write(track: &Track) -> Result<Vec<u8>, JsonReadError> {
     }
 
     let start_pos = if let Some(start_position) = track.metadata().start_position() {
-        V2 {
+        Some(V2 {
             x: start_position.x(),
             y: start_position.y(),
-        }
+        })
     } else {
-        V2 { x: 0.0, y: 0.0 }
+        Some(V2 { x: 0.0, y: 0.0 })
     };
 
-    let label = track.metadata().title().clone().unwrap_or("".to_string());
+    let label = Some(track.metadata().title().clone().unwrap_or("".to_string()));
     let creator = Some(track.metadata().artist().clone().unwrap_or("".to_string()));
     let description = Some(
         track

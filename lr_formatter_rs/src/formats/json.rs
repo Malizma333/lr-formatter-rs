@@ -142,7 +142,7 @@ struct JsonRider {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct JsonTrack {
-    label: String,
+    label: Option<String>,
     creator: Option<String>,
     description: Option<String>,
     duration: Option<u32>,
@@ -152,7 +152,7 @@ struct JsonTrack {
     riders: Option<Vec<JsonRider>>,
     script: Option<String>,
     #[serde(rename = "startPosition")]
-    start_pos: V2,
+    start_pos: Option<V2>,
     #[serde(rename = "linesArray", skip_serializing_if = "Option::is_none")]
     line_array: Option<Vec<LRAJsonArrayLine>>,
     #[serde(rename = "startZoom", skip_serializing_if = "Option::is_none")]

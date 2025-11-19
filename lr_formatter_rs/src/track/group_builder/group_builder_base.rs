@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Debug};
+use std::fmt::Debug;
 
 use crate::track::group_builder::group_builder_error::{GroupBuilderError, SubBuilderError};
 
@@ -27,24 +27,6 @@ pub(in crate::track) trait GroupBuilderBase: Default {
                 feature
             ),
         }
-    }
-
-    /// Check that a field is present *iff* the feature is enabled
-    fn check_feature<'a, T>(
-        features: &'a mut HashSet<Self::Feature>,
-        feature: Self::Feature,
-        field: &'a Option<T>,
-        attr_name: &'static str,
-    ) -> Result<(), GroupBuilderError<Self::SubError>> {
-        if features.contains(&feature) && field.is_none() {
-            return Err(GroupBuilderError::MissingAttribute(attr_name));
-        }
-
-        if !features.contains(&feature) && field.is_some() {
-            features.insert(feature);
-        }
-
-        Ok(())
     }
 }
 

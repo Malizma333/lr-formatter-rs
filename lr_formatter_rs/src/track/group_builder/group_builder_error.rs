@@ -11,9 +11,6 @@ pub enum GroupBuilderError<SubError>
 where
     SubError: SubBuilderError,
 {
-    /// Attribute was required (because feature is enabled) but missing
-    MissingAttribute(&'static str),
-
     /// Error from a sub-builder
     SubBuilderError(SubError),
 }
@@ -24,9 +21,6 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GroupBuilderError::MissingAttribute(attr) => {
-                write!(f, "Expected attribute to be set: {}", attr)
-            }
             GroupBuilderError::SubBuilderError(err) => write!(f, "{}", err),
         }
     }
@@ -39,7 +33,6 @@ where
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             GroupBuilderError::SubBuilderError(e) => Some(e),
-            _ => None,
         }
     }
 }

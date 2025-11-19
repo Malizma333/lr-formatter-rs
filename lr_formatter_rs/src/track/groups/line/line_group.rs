@@ -47,30 +47,12 @@ impl GroupBuilder for LineGroupBuilder {
             acceleration_lines.push(acceleration_line);
         }
 
-        for acceleration_line in &acceleration_lines {
-            Self::check_feature(
-                &mut self.features,
-                LineFeature::AccelerationMultiplier,
-                &acceleration_line.multiplier(),
-                "multiplier",
-            )?;
-        }
-
         for scenery_line_builder in &self.scenery_lines {
             let scenery_line = scenery_line_builder.build().map_group_err()?;
             if scenery_line.width().is_some() {
                 self.features.insert(LineFeature::SceneryWidth);
             }
             scenery_lines.push(scenery_line);
-        }
-
-        for scenery_line in &scenery_lines {
-            Self::check_feature(
-                &mut self.features,
-                LineFeature::SceneryWidth,
-                &scenery_line.width(),
-                "width",
-            )?;
         }
 
         Ok(LineGroup {

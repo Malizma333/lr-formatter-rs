@@ -169,8 +169,6 @@ pub fn read(data: Vec<u8>) -> Result<Track, JsonReadError> {
                 if let Some(folder_id) = &layer.folder_id {
                     if let FaultyU32::Valid(valid_folder_id) = folder_id {
                         layer_builder.folder_id(Some(*valid_folder_id));
-                    } else {
-                        layer_builder.folder_id(None);
                     }
                 }
             } else {

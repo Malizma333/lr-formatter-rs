@@ -63,36 +63,15 @@ impl GroupBuilder for TrackBuilder {
         let metadata = self.metadata.build().map_group_err()?;
         let line_group = self.line_group.build_group().map_group_err()?;
 
-        Self::check_feature(
-            &mut self.features,
-            TrackFeature::Layers,
-            &self.layer_group,
-            "layer_group",
-        )?;
-
         let layer_group = match self.layer_group.as_mut() {
             Some(layer_group_builder) => Some(layer_group_builder.build_group().map_group_err()?),
             None => None,
         };
 
-        Self::check_feature(
-            &mut self.features,
-            TrackFeature::RiderProperties,
-            &self.rider_group,
-            "rider_group",
-        )?;
-
         let rider_group = match self.rider_group.as_mut() {
             Some(rider_group_builder) => Some(rider_group_builder.build_group().map_group_err()?),
             None => None,
         };
-
-        Self::check_feature(
-            &mut self.features,
-            TrackFeature::BackgroundColorTriggers,
-            &self.background_color_group,
-            "background_color_group",
-        )?;
 
         let background_color_group = match self.background_color_group.as_mut() {
             Some(background_color_group) => {
@@ -101,36 +80,15 @@ impl GroupBuilder for TrackBuilder {
             None => None,
         };
 
-        Self::check_feature(
-            &mut self.features,
-            TrackFeature::LineColorTriggers,
-            &self.line_color_group,
-            "line_color_group",
-        )?;
-
         let line_color_group = match self.line_color_group.as_mut() {
             Some(line_color_group) => Some(line_color_group.build_group().map_group_err()?),
             None => None,
         };
 
-        Self::check_feature(
-            &mut self.features,
-            TrackFeature::CameraZoomTriggers,
-            &self.camera_zoom_group,
-            "camera_zoom_group",
-        )?;
-
         let camera_zoom_group = match self.camera_zoom_group.as_mut() {
             Some(camera_zoom_group) => Some(camera_zoom_group.build_group().map_group_err()?),
             None => None,
         };
-
-        Self::check_feature(
-            &mut self.features,
-            TrackFeature::LegacyCameraZoomTriggers,
-            &self.legacy_camera_zoom_group,
-            "legacy_camera_zoom_group",
-        )?;
 
         let legacy_camera_zoom_group = match self.legacy_camera_zoom_group.as_mut() {
             Some(legacy_camera_zoom_group) => {

@@ -48,40 +48,6 @@ impl GroupBuilder for LayerGroupBuilder {
             layers.push(layer);
         }
 
-        for layer in &layers {
-            Self::check_feature(
-                &mut self.features,
-                LayerFeature::Name,
-                &layer.name(),
-                "name",
-            )?;
-            Self::check_feature(
-                &mut self.features,
-                LayerFeature::Visible,
-                &layer.visible(),
-                "visible",
-            )?;
-            Self::check_feature(
-                &mut self.features,
-                LayerFeature::Editable,
-                &layer.editable(),
-                "editable",
-            )?;
-            Self::check_feature(
-                &mut self.features,
-                LayerFeature::Folders,
-                &layer.folder_id(),
-                "folder_id",
-            )?;
-        }
-
-        Self::check_feature(
-            &mut self.features,
-            LayerFeature::Folders,
-            &self.layer_folders,
-            "layer_folders",
-        )?;
-
         if let Some(layer_folder_builders) = &self.layer_folders {
             let mut some_layer_folders = vec![];
 
@@ -98,28 +64,6 @@ impl GroupBuilder for LayerGroupBuilder {
                 }
                 some_layer_folders.push(layer_folder);
             }
-
-            for layer_folder in &some_layer_folders {
-                Self::check_feature(
-                    &mut self.features,
-                    LayerFeature::Name,
-                    &layer_folder.name(),
-                    "name",
-                )?;
-                Self::check_feature(
-                    &mut self.features,
-                    LayerFeature::Visible,
-                    &layer_folder.visible(),
-                    "visible",
-                )?;
-                Self::check_feature(
-                    &mut self.features,
-                    LayerFeature::Editable,
-                    &layer_folder.editable(),
-                    "editable",
-                )?;
-            }
-
             layer_folders = Some(some_layer_folders);
         }
 

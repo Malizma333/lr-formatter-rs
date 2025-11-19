@@ -39,27 +39,6 @@ impl GroupBuilder for RiderGroupBuilder {
             riders.push(rider);
         }
 
-        for rider in &riders {
-            Self::check_feature(
-                &mut self.features,
-                RiderFeature::StartVelocity,
-                &rider.start_velocity(),
-                "start_velocity",
-            )?;
-            Self::check_feature(
-                &mut self.features,
-                RiderFeature::StartAngle,
-                &rider.start_angle(),
-                "start_angle",
-            )?;
-            Self::check_feature(
-                &mut self.features,
-                RiderFeature::Remount,
-                &rider.can_remount(),
-                "can_remount",
-            )?;
-        }
-
         Ok(RiderGroup {
             features: self.features.clone(),
             riders,

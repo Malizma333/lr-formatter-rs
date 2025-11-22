@@ -1,7 +1,7 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::Parser;
 use dialoguer::Input;
-use lr_formatter_rs::formats::{json, lrb, sol, trk};
+use lr_formatter_rs::formats::{json, sol, trk};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -9,13 +9,13 @@ use std::path::Path;
 #[derive(Parser)]
 #[command(
     version = "1.1.0",
-    author = "LRBSpec",
+    author = "Tobias Bessler",
     about = "CLI for converting Line Rider file formats"
 )]
 struct Cli {
     /// Path of the file to convert
     input_file: String,
-    /// Format to convert to (json, lrb, sol)
+    /// Format to convert to (json, sol)
     output_format: String,
     /// Optional output file path
     output_file: Option<String>,
@@ -23,7 +23,6 @@ struct Cli {
 
 enum Format {
     Json,
-    LRB,
     TRK,
     SOL(Option<u32>),
 }
@@ -31,16 +30,14 @@ enum Format {
 fn convert(input: Vec<u8>, from: Format, to: Format) -> Result<Vec<u8>> {
     let internal_format = match from {
         Format::Json => json::read(input)?,
-        Format::LRB => lrb::read(input)?,
         Format::TRK => trk::read(input)?,
         Format::SOL(track_index) => sol::read(input, track_index)?,
     };
 
     let output_bytes = match to {
         Format::Json => json::write(&internal_format)?,
-        Format::LRB => lrb::write(&internal_format)?,
         Format::SOL(_) => sol::write(&internal_format)?,
-        _ => bail!("Unsupported to format. Must be one of: json, lrb, sol"),
+        _ => bail!("Unsupported to format. Must be one of: json, sol"),
     };
 
     Ok(output_bytes)
@@ -49,11 +46,10 @@ fn convert(input: Vec<u8>, from: Format, to: Format) -> Result<Vec<u8>> {
 fn parse_format(format: &str, sol_index: Option<u32>) -> Result<Format> {
     match format.to_lowercase().as_str() {
         "json" => Ok(Format::Json),
-        "lrb" => Ok(Format::LRB),
         "trk" => Ok(Format::TRK),
         "sol" => Ok(Format::SOL(sol_index)),
         _ => Err(anyhow::anyhow!(
-            "Invalid format '{}'. Must be one of: json, lrb, trk, sol",
+            "Invalid format '{}'. Must be one of: json, trk, sol",
             format
         )),
     }
@@ -111,7 +107,6 @@ fn run() -> Result<()> {
     let output_format =
         parse_format(&args.output_format, None).context("Failed to parse output format")?;
     let output_extension = match output_format {
-        Format::LRB => ".lrb",
         Format::SOL(_) => ".sol",
         Format::TRK => ".trk",
         Format::Json => ".track.json",

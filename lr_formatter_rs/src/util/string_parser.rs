@@ -17,7 +17,6 @@ pub enum ParseLengthPrefixedStringError {
 }
 
 pub enum StringLength {
-    U8,
     U16,
     Fixed(usize),
 }
@@ -28,7 +27,6 @@ pub(crate) fn parse_string<B: ByteOrder>(
     length_type: StringLength,
 ) -> Result<String, ParseLengthPrefixedStringError> {
     let length = match length_type {
-        StringLength::U8 => usize::from(cursor.read_u8()?),
         StringLength::U16 => usize::from(cursor.read_u16::<B>()?),
         StringLength::Fixed(size) => size,
     };

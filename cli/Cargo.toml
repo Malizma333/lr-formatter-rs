@@ -2,10 +2,10 @@
 name = "track-converter"
 version = "1.1.0"
 edition = "2024"
-authors = ["LRB Spec"]
+authors = ["Tobias Bessler"]
 description = "CLI for converting Line Rider file formats"
 license = "MIT"
-repository = "https://github.com/lrbspec/lr-formatter-rs"
+repository = "https://github.com/Malizma/lr-formatter-rs"
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }

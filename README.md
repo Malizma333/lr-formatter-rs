@@ -11,5 +11,5 @@ A library for converting between Line Rider track formats, written in rust. See 
 # Build from source (releases not supported yet)
 make build-cli
 # MacOS/Linux
-cli/target/releases/track-converter ../samples/HAM.trk json
+cli/target/releases/track-converter ./samples/HAM.trk json
 ```

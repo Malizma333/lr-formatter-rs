@@ -1,6 +1,6 @@
 //! <https://github.com/KallDrexx/rust-media-libs>
 //! License: See ./LICENSE-APACHE and ./LICENSE-MIT
-//! Modifications Copyright 2025 LRBSpec
+//! Modifications Copyright 2025 Tobias Bessler
 
 use super::{Amf0Value, errors::Amf0DeserializationError, markers};
 use byteorder::{BigEndian, ReadBytesExt};

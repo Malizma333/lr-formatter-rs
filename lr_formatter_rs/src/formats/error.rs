@@ -1,5 +1,4 @@
 use crate::formats::json::{JsonReadError, JsonWriteError};
-use crate::formats::lrb::{LrbReadError, LrbWriteError};
 use crate::formats::sol::{SolReadError, SolWriteError};
 use crate::formats::trk::TrkReadError;
 use thiserror::Error;
@@ -9,8 +8,6 @@ pub enum TrackReadError {
     #[error("{0}")]
     Trk(#[from] TrkReadError),
     #[error("{0}")]
-    Lrb(#[from] LrbReadError),
-    #[error("{0}")]
     Json(#[from] JsonReadError),
     #[error("{0}")]
     Sol(#[from] SolReadError),
@@ -18,8 +15,6 @@ pub enum TrackReadError {
 
 #[derive(Error, Debug)]
 pub enum TrackWriteError {
-    #[error("{0}")]
-    Lrb(#[from] LrbWriteError),
     #[error("{0}")]
     Json(#[from] JsonWriteError),
     #[error("{0}")]

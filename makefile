@@ -30,3 +30,8 @@ test: ## Run unit and system tests
 
 .PHONY: precommit
 precommit: format lint test ## Run format, lint, and test
+
+.PHONY: build-cli
+build-cli: ## Build CLI executable in release mode
+# Outputted to target/release/track-converter
+	cd cli && cargo build -r

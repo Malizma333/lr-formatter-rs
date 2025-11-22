@@ -1,6 +1,6 @@
 //! This crate provides safe, compatible reading and writing of Line Rider track file formats.
 //!
-//! Supported formats: LRB (read/write), SOL (read/write), JSON (read/write), TRK (read)
+//! Supported formats: SOL (read/write), JSON (read/write), TRK (read)
 //!
 //! # Quickstart
 //!
